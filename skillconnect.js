@@ -81,13 +81,49 @@ function setupFilterListeners() {
   }
 }
 
-// Fetch shared peer network from server
+function mergePeerLists(existingList = [], newList = []) {
+  const mergedMap = new Map();
+
+  // Add existing local list first
+  (existingList || []).forEach(p => {
+    if (p && p.email) mergedMap.set(p.email.toLowerCase(), p);
+    else if (p && p.id) mergedMap.set(p.id, p);
+  });
+
+  // Merge with server list
+  (newList || []).forEach(p => {
+    if (p && p.email) mergedMap.set(p.email.toLowerCase(), p);
+    else if (p && p.id) mergedMap.set(p.id, p);
+  });
+
+  // Ensure current registered user is always present in network
+  const user = InsigniaState.currentUser;
+  if (user && user.isRegistered && user.email) {
+    const userPeer = {
+      id: user.id || ('usr_' + user.email.toLowerCase().replace(/[^a-z0-9]/g, '_')),
+      name: user.name,
+      role: user.targetTitle || user.role || 'Software Engineer',
+      targetCompany: user.targetCompany || 'Tech Enterprise',
+      email: user.email,
+      avatar: user.name ? user.name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2) : 'US',
+      status: 'Active Account',
+      skillsKnown: user.skillsKnown || [],
+      skillsWanted: user.skillsWanted || [],
+      bio: user.bio || ''
+    };
+    mergedMap.set(user.email.toLowerCase(), userPeer);
+  }
+
+  return Array.from(mergedMap.values());
+}
+
+// Fetch shared peer network from server and merge with local state
 async function syncAndRenderPeers(silent = false) {
   try {
     const res = await fetch('/api/peers');
     if (res.ok) {
       const sharedPeers = await res.json();
-      InsigniaState.peerNetwork = sharedPeers;
+      InsigniaState.peerNetwork = mergePeerLists(InsigniaState.peerNetwork, sharedPeers);
       saveState();
     }
   } catch (err) {
@@ -363,6 +399,13 @@ async function broadcastAccountToServer(accountObj) {
     bio: user.bio || 'Active job seeker on Insignia'
   };
 
+  // Immediately merge payload into local state so it renders instantly & never disappears
+  InsigniaState.peerNetwork = mergePeerLists(InsigniaState.peerNetwork, [peerPayload]);
+  saveState();
+  if (typeof matchAndRenderPeers === 'function') {
+    matchAndRenderPeers();
+  }
+
   try {
     const res = await fetch('/api/peers', {
       method: 'POST',
@@ -372,7 +415,7 @@ async function broadcastAccountToServer(accountObj) {
     if (res.ok) {
       const data = await res.json();
       if (data.peers && Array.isArray(data.peers)) {
-        InsigniaState.peerNetwork = data.peers;
+        InsigniaState.peerNetwork = mergePeerLists(InsigniaState.peerNetwork, data.peers);
         saveState();
         if (typeof matchAndRenderPeers === 'function') {
           matchAndRenderPeers();
