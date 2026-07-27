@@ -131,19 +131,28 @@ async function fetchPeersDirectFromSupabase() {
     if (res.ok) {
       const rows = await res.json();
       if (Array.isArray(rows)) {
-        return rows.map(p => ({
-          id: p.id,
-          name: p.name,
-          role: p.role || 'Software Engineer',
-          targetCompany: p.target_company || '',
-          email: p.email,
-          location: p.location || '',
-          avatar: p.avatar || (p.name ? p.name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2) : 'US'),
-          status: p.status || 'Active for Skill Exchange',
-          skillsKnown: typeof p.skills_known === 'string' ? JSON.parse(p.skills_known) : p.skills_known || [],
-          skillsWanted: typeof p.skills_wanted === 'string' ? JSON.parse(p.skills_wanted) : p.skills_wanted || [],
-          bio: p.bio || ''
-        }));
+        const WIPED_IDS = [
+          'usr_1', 'usr_2', 'usr_3', 'usr_4', 'usr_test',
+          'usr_shankaragoudapatil0406_gmail_com',
+          'usr_chetan_gmail_com',
+          'usr_suhas_gmail_com',
+          'usr_none_gmail_com'
+        ];
+        return rows
+          .filter(p => p && p.id && !WIPED_IDS.includes(p.id) && !p.email.includes('tech.org') && !p.email.includes('backend.io') && !p.email.includes('ai.edu') && !p.email.includes('devnet.com'))
+          .map(p => ({
+            id: p.id,
+            name: p.name,
+            role: p.role || 'Software Engineer',
+            targetCompany: p.target_company || '',
+            email: p.email,
+            location: p.location || '',
+            avatar: p.avatar || (p.name ? p.name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2) : 'US'),
+            status: p.status || 'Active for Skill Exchange',
+            skillsKnown: typeof p.skills_known === 'string' ? JSON.parse(p.skills_known) : p.skills_known || [],
+            skillsWanted: typeof p.skills_wanted === 'string' ? JSON.parse(p.skills_wanted) : p.skills_wanted || [],
+            bio: p.bio || ''
+          }));
       }
     }
   } catch (e) {

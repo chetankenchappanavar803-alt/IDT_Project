@@ -64,9 +64,15 @@ function getLocalPeers() {
 
 function formatSupabasePeers(supaPeers) {
   if (!Array.isArray(supaPeers)) return [];
-  const DEMO_IDS = ['usr_1', 'usr_2', 'usr_3', 'usr_4', 'usr_test'];
+  const WIPED_IDS = [
+    'usr_1', 'usr_2', 'usr_3', 'usr_4', 'usr_test',
+    'usr_shankaragoudapatil0406_gmail_com',
+    'usr_chetan_gmail_com',
+    'usr_suhas_gmail_com',
+    'usr_none_gmail_com'
+  ];
   return supaPeers
-    .filter(p => p && p.id && !DEMO_IDS.includes(p.id) && !p.email.includes('tech.org') && !p.email.includes('backend.io') && !p.email.includes('ai.edu') && !p.email.includes('devnet.com'))
+    .filter(p => p && p.id && !WIPED_IDS.includes(p.id) && !p.email.includes('tech.org') && !p.email.includes('backend.io') && !p.email.includes('ai.edu') && !p.email.includes('devnet.com'))
     .map(p => ({
       id: p.id,
       name: p.name,
