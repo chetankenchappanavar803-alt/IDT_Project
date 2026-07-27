@@ -64,19 +64,22 @@ function getLocalPeers() {
 
 function formatSupabasePeers(supaPeers) {
   if (!Array.isArray(supaPeers)) return [];
-  return supaPeers.map(p => ({
-    id: p.id,
-    name: p.name,
-    role: p.role || 'Software Engineer',
-    targetCompany: p.target_company || '',
-    email: p.email,
-    location: p.location || '',
-    avatar: p.avatar || (p.name ? p.name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2) : 'US'),
-    status: p.status || 'Active for Skill Exchange',
-    skillsKnown: typeof p.skills_known === 'string' ? JSON.parse(p.skills_known) : p.skills_known || [],
-    skillsWanted: typeof p.skills_wanted === 'string' ? JSON.parse(p.skills_wanted) : p.skills_wanted || [],
-    bio: p.bio || ''
-  }));
+  const DEMO_IDS = ['usr_1', 'usr_2', 'usr_3', 'usr_4', 'usr_test'];
+  return supaPeers
+    .filter(p => p && p.id && !DEMO_IDS.includes(p.id) && !p.email.includes('tech.org') && !p.email.includes('backend.io') && !p.email.includes('ai.edu') && !p.email.includes('devnet.com'))
+    .map(p => ({
+      id: p.id,
+      name: p.name,
+      role: p.role || 'Software Engineer',
+      targetCompany: p.target_company || '',
+      email: p.email,
+      location: p.location || '',
+      avatar: p.avatar || (p.name ? p.name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2) : 'US'),
+      status: p.status || 'Active for Skill Exchange',
+      skillsKnown: typeof p.skills_known === 'string' ? JSON.parse(p.skills_known) : p.skills_known || [],
+      skillsWanted: typeof p.skills_wanted === 'string' ? JSON.parse(p.skills_wanted) : p.skills_wanted || [],
+      bio: p.bio || ''
+    }));
 }
 
 module.exports = async (req, res) => {

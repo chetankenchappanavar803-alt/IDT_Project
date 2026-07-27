@@ -192,9 +192,11 @@ if (!fs.existsSync(PEERS_FILE)) {
 function getPeers() {
   try {
     const data = fs.readFileSync(PEERS_FILE, 'utf8');
-    return JSON.parse(data);
+    const peers = JSON.parse(data);
+    const DEMO_IDS = ['usr_1', 'usr_2', 'usr_3', 'usr_4', 'usr_test'];
+    return (Array.isArray(peers) ? peers : []).filter(p => p && p.id && !DEMO_IDS.includes(p.id) && !p.email.includes('tech.org') && !p.email.includes('backend.io') && !p.email.includes('ai.edu') && !p.email.includes('devnet.com'));
   } catch (e) {
-    return DEFAULT_PEERS;
+    return [];
   }
 }
 
