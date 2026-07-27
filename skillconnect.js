@@ -444,7 +444,22 @@ let inboxPollTimer = null;
 
 async function loadInbox() {
   const user = InsigniaState.currentUser;
-  if (!user.isRegistered || !user.email) return;
+  const container = document.getElementById('inbox-list');
+
+  if (!user || !user.email) {
+    if (container) {
+      container.innerHTML = `
+        <div style="text-align:center; padding: 40px 20px; color: var(--text-muted);">
+          <i class="bi bi-person-lock" style="font-size: 2.5rem; display:block; margin-bottom:12px; color: var(--amber);"></i>
+          <h4 style="font-size: 0.95rem; font-weight:700; color: #fff; margin-bottom: 6px;">Profile Registration Required</h4>
+          <p style="font-size:0.82rem; margin-bottom:16px;">Set up your profile name &amp; email to send and receive skill exchange proposals.</p>
+          <button class="btn-primary trigger-auth-modal" style="font-size:0.8rem; padding:8px 16px;">
+            <i class="bi bi-person-circle"></i> Profile Setup
+          </button>
+        </div>`;
+    }
+    return;
+  }
 
   try {
     const res = await fetch(`/api/exchanges?email=${encodeURIComponent(user.email)}`);
