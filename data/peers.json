@@ -1,0 +1,138 @@
+[
+  {
+    "id": "usr_shankaragoudapatil0406_gmail_com",
+    "name": "shankar",
+    "role": "Software Engineer",
+    "targetCompany": "Tech Enterprise",
+    "email": "shankaragoudapatil0406@gmail.com",
+    "avatar": "S",
+    "status": "Active Account",
+    "skillsKnown": [
+      "java"
+    ],
+    "skillsWanted": [
+      "python"
+    ],
+    "bio": "Active job seeker on Insignia"
+  },
+  {
+    "id": "usr_chetan_gmail_com",
+    "name": "chetan k",
+    "role": "Software Engineer",
+    "targetCompany": "Tech Enterprise",
+    "email": "chetan@gmail.com",
+    "avatar": "CK",
+    "status": "Active Account",
+    "skillsKnown": [
+      "python"
+    ],
+    "skillsWanted": [
+      "java"
+    ],
+    "bio": "Active job seeker on Insignia"
+  },
+  {
+    "id": "usr_1",
+    "name": "Sarah Chen",
+    "role": "Frontend Specialist",
+    "targetCompany": "Meta / Google",
+    "email": "sarah.chen@tech.org",
+    "location": "Seattle, WA",
+    "avatar": "SC",
+    "status": "Active for Skill Exchange",
+    "skillsKnown": [
+      "React.js",
+      "TypeScript",
+      "CSS/Glassmorphism",
+      "Web Vitals",
+      "UI/UX Design"
+    ],
+    "skillsWanted": [
+      "System Design",
+      "Node.js",
+      "Python",
+      "Docker",
+      "PostgreSQL"
+    ],
+    "bio": "5+ years building frontend user interfaces. Looking to learn backend system design architecture in exchange for React/CSS mastery."
+  },
+  {
+    "id": "usr_2",
+    "name": "Marcus Vance",
+    "role": "Backend Architect",
+    "targetCompany": "Amazon / Uber",
+    "email": "marcus.vance@backend.io",
+    "location": "Austin, TX",
+    "avatar": "MV",
+    "status": "Available to Exchange",
+    "skillsKnown": [
+      "System Design",
+      "Node.js",
+      "Python",
+      "Redis",
+      "PostgreSQL",
+      "Docker",
+      "REST APIs"
+    ],
+    "skillsWanted": [
+      "React.js",
+      "TypeScript",
+      "CSS/Glassmorphism",
+      "UI Design",
+      "Frontend Performance"
+    ],
+    "bio": "Distributed systems backend developer. Eager to partner with frontend devs to learn modern React/Glassmorphism UI skills."
+  },
+  {
+    "id": "usr_3",
+    "name": "Priya Sharma",
+    "role": "Data Scientist & AI Developer",
+    "targetCompany": "Microsoft / OpenAI",
+    "email": "priya.sharma@ai.edu",
+    "location": "New York, NY",
+    "avatar": "PS",
+    "status": "Seeking Exchange Partner",
+    "skillsKnown": [
+      "Python",
+      "PyTorch",
+      "Machine Learning",
+      "SQL",
+      "A/B Testing",
+      "Data Pipelines"
+    ],
+    "skillsWanted": [
+      "React.js",
+      "System Design",
+      "Node.js",
+      "TypeScript",
+      "Docker"
+    ],
+    "bio": "Machine learning practitioner building AI interview agents. Offering ML/Python mentoring for Full Stack & System Design help."
+  },
+  {
+    "id": "usr_4",
+    "name": "David Miller",
+    "role": "Full Stack Engineer",
+    "targetCompany": "Stripe / Airbnb",
+    "email": "david.miller@devnet.com",
+    "location": "San Francisco, CA",
+    "avatar": "DM",
+    "status": "Active for Skill Exchange",
+    "skillsKnown": [
+      "Node.js",
+      "GraphQL",
+      "PostgreSQL",
+      "Docker",
+      "REST APIs",
+      "TypeScript"
+    ],
+    "skillsWanted": [
+      "System Design",
+      "Python",
+      "PyTorch",
+      "CSS/Glassmorphism",
+      "Web Vitals"
+    ],
+    "bio": "Fullstack engineer focused on backend infrastructure. Looking for ML & Glassmorphism experts for mutual interview prep."
+  }
+]

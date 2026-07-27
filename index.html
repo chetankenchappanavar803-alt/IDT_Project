@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Insignia – AI Interview Preparation Suite</title>
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <!-- Custom Glassmorphism Theme -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Ambient Particle Canvas Background -->
+  <canvas id="bg-canvas"></canvas>
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <div id="app-container">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-logo">
+          <i class="bi bi-shield-lock-fill"></i>
+        </div>
+        <div class="brand-info">
+          <h1>Insignia</h1>
+          <p>AI Suite</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Navigation</div>
+        
+        <button class="nav-btn active" data-view="dashboard">
+          <i class="bi bi-grid-fill"></i>
+          <span>Dashboard</span>
+        </button>
+
+        <button class="nav-btn" data-view="resume">
+          <i class="bi bi-file-earmark-person-fill"></i>
+          <span>Resume Builder</span>
+        </button>
+
+        <button class="nav-btn" data-view="qna">
+          <i class="bi bi-chat-square-text-fill"></i>
+          <span>Q&A Generator</span>
+        </button>
+
+        <button class="nav-btn" data-view="study">
+          <i class="bi bi-journal-bookmark-fill"></i>
+          <span>Study Hub</span>
+        </button>
+
+        <button class="nav-btn" data-view="skillconnect">
+          <i class="bi bi-people-fill"></i>
+          <span>Skill Connect</span>
+        </button>
+
+        <button class="nav-btn" data-view="mock">
+          <i class="bi bi-camera-video-fill"></i>
+          <span>Mock Interview</span>
+        </button>
+
+        <div class="nav-section-title" style="margin-top: 16px;">Account</div>
+
+        <button class="nav-btn" data-view="profile">
+          <i class="bi bi-person-gear"></i>
+          <span>Profile Setup</span>
+        </button>
+
+        <button class="nav-btn" id="btn-open-inbox" style="position:relative;">
+          <i class="bi bi-inbox-fill"></i>
+          <span>Exchange Inbox</span>
+          <span id="inbox-badge" style="display:none; position:absolute; top:6px; right:10px; background:#ef4444; color:#fff; font-size:0.65rem; font-weight:800; min-width:18px; height:18px; border-radius:50%; align-items:center; justify-content:center; line-height:1;">0</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-status-card">
+          <div class="user-avatar user-avatar-text">AM</div>
+          <div class="user-details">
+            <div class="user-name user-name-text">Alex Morgan</div>
+            <div class="user-role user-role-text">Frontend Engineer</div>
+          </div>
+          <button class="btn-auth-switch trigger-auth-modal" title="Switch User / Auth">
+            <i class="bi bi-box-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+      
+      <!-- Top Navbar -->
+      <header class="top-navbar">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <button class="nav-toggle-btn" id="mobile-menu-toggle">
+            <i class="bi bi-list"></i>
+          </button>
+          <div class="page-heading">
+            <h2 id="page-title">Welcome to Insignia</h2>
+            <p id="page-subtitle">Your AI-powered interview preparation command center</p>
+          </div>
+        </div>
+
+        <div class="navbar-actions">
+          <div class="profile-completeness-badge">
+            <div class="badge-dot"></div>
+            <span id="profile-completeness-text">Profile: 85% Complete</span>
+          </div>
+
+          <button class="btn-primary trigger-auth-modal" style="font-size: 0.82rem; padding: 8px 14px;">
+            <i class="bi bi-person-circle"></i> Profile Setup
+          </button>
+
+          <!-- Gemini AI Status Badge -->
+          <button id="ai-status-badge" class="open-gemini-modal" style="
+            display: flex; align-items: center; gap: 7px;
+            background: linear-gradient(135deg,rgba(16,185,129,.25),rgba(6,182,212,.25));
+            border: 1px solid var(--emerald); color: var(--emerald);
+            border-radius: 20px; padding: 6px 14px; font-size: 0.78rem;
+            font-weight: 700; cursor: pointer; white-space: nowrap;
+            transition: all 0.2s ease;">
+            ⚡ Gemini AI Active
+          </button>
+        </div>
+      </header>
+
+      <!-- VIEW: Dashboard -->
+      <main id="view-dashboard" class="view-content active">
+        <div class="glass-card hero-banner">
+          <h2 class="hero-title">Welcome to Insignia</h2>
+          <p class="hero-subtitle">Your AI-powered interview preparation command center. Track your readiness, build ATS resumes, practice role questions, and take mock interviews.</p>
+        </div>
+
+        <!-- AI Coach Insight Banner -->
+        <div id="dashboard-ai-coach-card" class="glass-card" style="margin-bottom: 24px; border-left: 4px solid var(--purple); padding: 18px 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i class="bi bi-stars" style="color: var(--purple); font-size: 1.2rem;"></i>
+              <h4 style="font-size: 0.95rem; font-weight: 800; color: #fff;">Gemini AI Career Coach Analysis</h4>
+            </div>
+            <button class="btn-secondary" id="btn-refresh-ai-insight" style="padding: 4px 10px; font-size: 0.75rem;">
+              <i class="bi bi-arrow-clockwise"></i> Refresh Insight
+            </button>
+          </div>
+          <div id="dashboard-ai-coach-content" style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.6;">
+            Loading your personalized AI career readiness analysis…
+          </div>
+        </div>
+
+        <!-- 4 Key Stat Cards -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-icon blue">
+              <i class="bi bi-file-earmark-text"></i>
+            </div>
+            <div>
+              <div class="stat-value" id="stat-resume-count">0</div>
+              <div class="stat-label">Resumes Built</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon cyan">
+              <i class="bi bi-chat-left-dots"></i>
+            </div>
+            <div>
+              <div class="stat-value" id="stat-qna-count">0</div>
+              <div class="stat-label">Questions Practiced</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon purple">
+              <i class="bi bi-book"></i>
+            </div>
+            <div>
+              <div class="stat-value" id="stat-study-count">0</div>
+              <div class="stat-label">Topics Studied</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon emerald">
+              <i class="bi bi-camera-video"></i>
+            </div>
+            <div>
+              <div class="stat-value" id="stat-mock-count">0</div>
+              <div class="stat-label">Mock Interviews</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Grid Layout -->
+        <div class="dashboard-grid">
+          <!-- Left: Quick Actions -->
+          <div>
+            <div class="section-title">Quick Actions</div>
+            <div class="quick-actions-grid">
+              
+              <div class="action-card" id="btn-action-resume">
+                <div class="action-card-header">
+                  <div class="action-card-icon" style="background: rgba(99, 102, 241, 0.2); color: var(--primary);">
+                    <i class="bi bi-file-earmark-text"></i>
+                  </div>
+                  <i class="bi bi-arrow-right-short" style="font-size: 1.4rem; color: var(--text-muted);"></i>
+                </div>
+                <div>
+                  <h3 class="action-card-title">Build Your Resume</h3>
+                  <p class="action-card-desc">Create an ATS-optimized resume tailored to your target role.</p>
+                </div>
+              </div>
+
+              <div class="action-card" id="btn-action-qna">
+                <div class="action-card-header">
+                  <div class="action-card-icon" style="background: rgba(6, 182, 212, 0.2); color: var(--cyan);">
+                    <i class="bi bi-chat-square-text"></i>
+                  </div>
+                  <i class="bi bi-arrow-right-short" style="font-size: 1.4rem; color: var(--text-muted);"></i>
+                </div>
+                <div>
+                  <h3 class="action-card-title">Generate Q&A</h3>
+                  <p class="action-card-desc">Get role-specific interview questions with AI-crafted model answers.</p>
+                </div>
+              </div>
+
+              <div class="action-card" id="btn-action-study">
+                <div class="action-card-header">
+                  <div class="action-card-icon" style="background: rgba(245, 158, 11, 0.2); color: var(--amber);">
+                    <i class="bi bi-journal-bookmark"></i>
+                  </div>
+                  <i class="bi bi-arrow-right-short" style="font-size: 1.4rem; color: var(--text-muted);"></i>
+                </div>
+                <div>
+                  <h3 class="action-card-title">Study Concepts</h3>
+                  <p class="action-card-desc">Structured learning paths curated for your target domain.</p>
+                </div>
+              </div>
+
+              <div class="action-card" id="btn-action-mock">
+                <div class="action-card-header">
+                  <div class="action-card-icon" style="background: rgba(244, 63, 94, 0.2); color: var(--rose);">
+                    <i class="bi bi-camera-video"></i>
+                  </div>
+                  <i class="bi bi-arrow-right-short" style="font-size: 1.4rem; color: var(--text-muted);"></i>
+                </div>
+                <div>
+                  <h3 class="action-card-title">Mock Interview</h3>
+                  <p class="action-card-desc">Practice with AI-powered mock interviews and get instant feedback.</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Right: Interview Readiness Widget -->
+          <div class="glass-card readiness-widget">
+            <h3 style="font-size: 1.05rem; font-weight: 700; width: 100%; text-align: left;">Interview Readiness</h3>
+            <p style="font-size: 0.78rem; color: var(--text-muted); width: 100%; text-align: left;">Track your preparation progress at a glance</p>
+
+            <div class="gauge-container">
+              <svg class="gauge-svg" viewBox="0 0 160 160">
+                <defs>
+                  <linearGradient id="gauge-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#6366f1" />
+                    <stop offset="100%" stop-color="#06b6d4" />
+                  </linearGradient>
+                </defs>
+                <circle class="gauge-bg" cx="80" cy="80" r="70"></circle>
+                <circle class="gauge-progress" id="dashboard-gauge-circle" cx="80" cy="80" r="70"></circle>
+              </svg>
+              <div class="gauge-text-center">
+                <div class="gauge-score" id="dashboard-readiness-score">78%</div>
+                <div class="gauge-caption">Readiness</div>
+              </div>
+            </div>
+
+            <div class="breakdown-list">
+              <div class="breakdown-item">
+                <div class="breakdown-header">
+                  <span>ATS Resume Score</span>
+                  <span id="bar-resume-val" style="color: var(--cyan);">85%</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="bar-resume" style="width: 85%; background: var(--cyan);"></div>
+                </div>
+              </div>
+
+              <div class="breakdown-item">
+                <div class="breakdown-header">
+                  <span>Technical Q&A Mastery</span>
+                  <span id="bar-tech-val" style="color: var(--primary);">75%</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="bar-tech" style="width: 75%; background: var(--primary);"></div>
+                </div>
+              </div>
+
+              <div class="breakdown-item">
+                <div class="breakdown-header">
+                  <span>Mock Interview Score</span>
+                  <span id="bar-mock-val" style="color: var(--purple);">70%</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="bar-mock" style="width: 70%; background: var(--purple);"></div>
+                </div>
+              </div>
+
+              <div class="breakdown-item">
+                <div class="breakdown-header">
+                  <span>Study Hub Completion</span>
+                  <span id="bar-study-val" style="color: var(--emerald);">80%</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="bar-study" style="width: 80%; background: var(--emerald);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+
+      <!-- VIEW: Profile Setup -->
+      <main id="view-profile" class="view-content">
+        <div class="glass-card" style="max-width: 800px; margin: 0 auto;">
+          <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 6px;">Profile Management</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 24px;">Manage your personal, professional, and career details used across Insignia modules.</p>
+
+          <form id="form-profile-setup">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" class="form-control" id="prof-name" value="Alex Morgan" required>
+              </div>
+
+              <div class="form-group">
+                <label>Email Address *</label>
+                <input type="email" class="form-control" id="prof-email" value="alex.morgan@example.com" required>
+              </div>
+
+              <div class="form-group">
+                <label>Target Job Title *</label>
+                <input type="text" class="form-control" id="prof-title" value="Senior Frontend Developer" required>
+              </div>
+
+              <div class="form-group">
+                <label>Experience Level</label>
+                <select class="form-control" id="prof-level">
+                  <option value="Entry-Level">Entry-Level (0-2 Yrs)</option>
+                  <option value="Mid-Level" selected>Mid-Level (3-5 Yrs)</option>
+                  <option value="Senior">Senior (5+ Yrs)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" class="form-control" id="prof-phone" value="+1 (555) 234-5678">
+              </div>
+
+              <div class="form-group">
+                <label>Location</label>
+                <input type="text" class="form-control" id="prof-location" value="San Francisco, CA">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>LinkedIn URL</label>
+              <input type="text" class="form-control" id="prof-linkedin" value="linkedin.com/in/alex-morgan">
+            </div>
+
+            <div class="form-group">
+              <label>GitHub / Portfolio URL</label>
+              <input type="text" class="form-control" id="prof-github" value="github.com/alex-morgan">
+            </div>
+
+            <div class="form-group">
+              <label>Professional Bio & Objective</label>
+              <textarea class="form-control" id="prof-bio">Passionate software engineer focused on React, TypeScript, and modern responsive web interfaces.</textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+              <button type="submit" class="btn-primary">
+                <i class="bi bi-save"></i> Save Profile Details
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
+
+      <!-- VIEW: Resume Builder -->
+      <main id="view-resume" class="view-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 style="font-size: 1.25rem; font-weight: 800;">Resume Builder</h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted);">AI-powered ATS-friendly resume generation &amp; real-time evaluation</p>
+          </div>
+          
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <span id="ats-score-text" style="padding: 6px 14px; background: rgba(99, 102, 241, 0.15); color: var(--cyan); border-radius: 20px; font-weight: 700; font-size: 0.85rem;">85% ATS Score</span>
+            <button class="btn-secondary" id="btn-load-sample-resume">✨ Load Sample</button>
+            <button class="btn-primary btn-accent-purple" id="btn-ai-score-resume" style="font-size: 0.82rem; padding: 8px 14px;">
+              <i class="bi bi-stars"></i> AI Score Resume
+            </button>
+            <button class="btn-primary" id="btn-print-resume"><i class="bi bi-printer"></i> Export PDF</button>
+          </div>
+        </div>
+
+        <!-- AI Resume Score Panel -->
+        <div id="ai-score-panel" class="glass-card" style="display: none; margin-bottom: 24px; border-left: 4px solid var(--cyan); padding: 20px;"></div>
+
+        <div class="resume-builder-grid">
+          <!-- Left: Input Form -->
+          <div class="glass-card">
+            <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 16px; border-bottom: 1px solid var(--glass-border); padding-bottom: 8px;">
+              👤 Personal Information
+            </h4>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" class="form-control" id="res-name" placeholder="John Doe">
+              </div>
+              <div class="form-group">
+                <label>Email *</label>
+                <input type="email" class="form-control" id="res-email" placeholder="john@example.com">
+              </div>
+              <div class="form-group">
+                <label>Phone</label>
+                <input type="text" class="form-control" id="res-phone" placeholder="+1 234 567 890">
+              </div>
+              <div class="form-group">
+                <label>Location</label>
+                <input type="text" class="form-control" id="res-location" placeholder="San Francisco, CA">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label>LinkedIn URL</label>
+                <input type="text" class="form-control" id="res-linkedin" placeholder="linkedin.com/in/john">
+              </div>
+              <div class="form-group">
+                <label>Portfolio / GitHub</label>
+                <input type="text" class="form-control" id="res-github" placeholder="github.com/john">
+              </div>
+            </div>
+
+            <h4 style="font-size: 1rem; font-weight: 700; margin: 20px 0 16px 0; border-bottom: 1px solid var(--glass-border); padding-bottom: 8px;">
+              🎯 Target Role & Summary
+            </h4>
+            <div class="form-group">
+              <label>Target Job Title *</label>
+              <input type="text" class="form-control" id="res-title" placeholder="e.g., Frontend Developer">
+            </div>
+
+            <div class="form-group">
+              <label>Professional Summary</label>
+              <textarea class="form-control" id="res-summary" placeholder="Brief summary highlighting skills and achievements..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>Skills (Comma-separated)</label>
+              <textarea class="form-control" id="res-skills" style="min-height: 60px;" placeholder="JavaScript, React, Node.js, HTML5, CSS3..."></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0 12px 0;">
+              <h4 style="font-size: 1rem; font-weight: 700;">💼 Work Experience</h4>
+              <button class="btn-secondary" id="btn-add-exp" style="padding: 4px 10px; font-size: 0.75rem;">+ Add Entry</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0 12px 0;">
+              <h4 style="font-size: 1rem; font-weight: 700;">🎓 Education</h4>
+              <button class="btn-secondary" id="btn-add-edu" style="padding: 4px 10px; font-size: 0.75rem;">+ Add Entry</button>
+            </div>
+          </div>
+
+          <!-- Right: Live ATS Preview -->
+          <div>
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase;">
+              Live ATS Resume Preview
+            </div>
+            <div id="resume-preview-pane"></div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW: Q&A Generator -->
+      <main id="view-qna" class="view-content">
+        <div class="glass-card" style="margin-bottom: 24px;">
+          <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 4px;">Interview Q&amp;A Generator</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">Role-specific questions with Gemini AI-crafted model answers</p>
+
+          <!-- AI Status Banner -->
+          <div id="qna-ai-banner" style="
+            background: linear-gradient(135deg,rgba(16,185,129,.12),rgba(6,182,212,.12));
+            border: 1px solid rgba(6,182,212,0.3); border-radius: 10px;
+            padding: 10px 14px; margin-bottom: 16px; font-size: 0.82rem; color: var(--text-muted);">
+            <i class="bi bi-stars" style="color:var(--cyan);"></i>
+            <strong>Gemini AI Active</strong> — Click "Generate AI Questions" for real-time personalized questions
+          </div>
+
+          <div class="qna-filter-bar">
+            <div style="flex: 1; min-width: 160px;">
+              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted);">Target Role *</label>
+              <select class="form-control" id="qna-role-select">
+                <option value="All">All Roles</option>
+                <option value="Frontend Developer" selected>Frontend Developer</option>
+                <option value="Backend Developer">Backend Developer</option>
+                <option value="Full Stack Developer">Full Stack Developer</option>
+                <option value="Data Scientist">Data Scientist</option>
+                <option value="Software Engineer">Software Engineer</option>
+                <option value="DevOps Engineer">DevOps Engineer</option>
+                <option value="Machine Learning Engineer">ML Engineer</option>
+              </select>
+            </div>
+
+            <div style="flex: 1; min-width: 140px;">
+              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted);">Experience Level</label>
+              <select class="form-control" id="qna-level-select">
+                <option value="Entry-Level">Entry-Level</option>
+                <option value="Mid-Level" selected>Mid-Level</option>
+                <option value="Senior">Senior</option>
+              </select>
+            </div>
+
+            <div style="flex: 1; min-width: 140px;">
+              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted);">Question Type</label>
+              <select class="form-control" id="qna-type-select">
+                <option value="All">All Types</option>
+                <option value="Technical">Technical</option>
+                <option value="Behavioral">Behavioral</option>
+                <option value="System Design">System Design</option>
+                <option value="HR">HR</option>
+              </select>
+            </div>
+
+            <div style="display: flex; align-items: flex-end;">
+              <button class="btn-primary btn-accent-cyan" id="btn-generate-qna">
+                <i class="bi bi-stars"></i> Generate AI Questions
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="qna-cards-container"></div>
+      </main>
+
+      <!-- VIEW: Study Hub -->
+      <main id="view-study" class="view-content">
+        <div class="glass-card" style="margin-bottom: 24px;">
+          <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 4px;">AI Study Hub</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Gemini AI generates personalized study plans for your target domain &amp; level</p>
+
+          <div class="qna-filter-bar">
+            <div style="flex: 1; min-width: 180px;">
+              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted);">Target Domain / Skill *</label>
+              <select class="form-control" id="study-domain-select">
+                <option value="Frontend Development" selected>Frontend Development</option>
+                <option value="Backend &amp; System Design">Backend &amp; System Design</option>
+                <option value="Data Structures &amp; Algorithms">Data Structures &amp; Algorithms</option>
+                <option value="Full Stack Development">Full Stack Development</option>
+                <option value="Machine Learning &amp; AI">Machine Learning &amp; AI</option>
+                <option value="DevOps &amp; Cloud Architecture">DevOps &amp; Cloud Architecture</option>
+                <option value="Database Engineering &amp; SQL">Database Engineering &amp; SQL</option>
+                <option value="Mobile App Development">Mobile App Development (Android / iOS)</option>
+                <option value="Cybersecurity &amp; AppSec">Cybersecurity &amp; AppSec</option>
+              </select>
+            </div>
+
+            <div style="flex: 1; min-width: 140px;">
+              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted);">Depth Level</label>
+              <select class="form-control" id="study-level-select">
+                <option value="Beginner">Beginner / Foundation</option>
+                <option value="Mid-Level" selected>Intermediate / Mid-Level</option>
+                <option value="Advanced">Advanced / Principal</option>
+              </select>
+            </div>
+
+            <div style="display: flex; align-items: flex-end;">
+              <button class="btn-primary btn-accent-cyan" id="btn-generate-study-plan">
+                <i class="bi bi-stars"></i> Generate AI Study Plan
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+          <div id="study-pathways-container"></div>
+
+          <!-- Notes Area -->
+          <div class="glass-card" style="height: fit-content;">
+            <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px;">📝 Study Notes</h4>
+            <textarea class="form-control" id="study-notes-area" style="min-height: 300px; font-size: 0.88rem;" placeholder="Type your personal preparation notes here..."></textarea>
+            <p style="font-size: 0.72rem; color: var(--text-dim); margin-top: 8px;">Auto-saved to Local Storage</p>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW: Mock Interview -->
+      <main id="view-mock" class="view-content">
+              <div id="mock-config-pane" class="glass-card" style="max-width: 650px; margin: 0 auto;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <div style="width: 54px; height: 54px; border-radius: 50%; background: rgba(6, 182, 212, 0.15); color: var(--cyan); display: inline-flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 12px;">
+              <i class="bi bi-camera-video-fill"></i>
+            </div>
+            <h3 style="font-size: 1.35rem; font-weight: 800;">Configure Your AI Mock Interview</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Gemini AI will generate personalized questions for your role &amp; level</p>
+          </div>
+
+          <div class="form-group">
+            <label>Target Role *</label>
+            <select class="form-control" id="mock-target-role">
+              <option>Software Engineer</option>
+              <option>Frontend Developer</option>
+              <option>Backend Developer</option>
+              <option>Full Stack Developer</option>
+              <option>Data Scientist</option>
+              <option>ML Engineer</option>
+              <option>DevOps Engineer</option>
+              <option>Product Manager</option>
+              <option>Android Developer</option>
+              <option>iOS Developer</option>
+              <option>Cloud Architect</option>
+              <option>Cybersecurity Analyst</option>
+            </select>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label>Experience Level</label>
+              <select class="form-control" id="mock-level-select">
+                <option>Entry-Level</option>
+                <option selected>Mid-Level</option>
+                <option>Senior</option>
+                <option>Lead / Principal</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Number of Questions</label>
+              <select class="form-control" id="mock-count-select">
+                <option value="3">3 Questions (Quick)</option>
+                <option value="5" selected>5 Questions (Standard)</option>
+                <option value="8">8 Questions (Full)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Target Company <span style="color:var(--text-dim); font-weight:400;">(optional — personalizes questions)</span></label>
+            <input type="text" class="form-control" id="mock-company-input" placeholder="e.g. Google, Amazon, Microsoft, Infosys…">
+          </div>
+
+          <div style="margin-top: 24px; text-align: center;">
+            <button class="btn-primary btn-accent-cyan" id="btn-start-mock" style="width: 100%; justify-content: center; padding: 14px; font-size: 1rem;">
+              <i class="bi bi-stars"></i> Generate AI Questions &amp; Start
+            </button>
+          </div>
+        </div>
+
+        <!-- AI Loading Pane -->
+        <div id="mock-loading-pane" style="display:none; max-width:650px; margin:0 auto;">
+          <div class="glass-card" style="text-align:center; padding:48px 24px;">
+            <div style="font-size:3rem; margin-bottom:16px;">🤖</div>
+            <h3 style="font-size:1.1rem; font-weight:800; margin-bottom:8px;" id="mock-loading-message">Gemini AI is generating your personalized questions…</h3>
+            <p style="font-size:0.82rem; color:var(--text-muted);">Tailored to your role, level, and target company</p>
+            <div style="margin-top:20px; height:4px; background:rgba(255,255,255,0.06); border-radius:4px; overflow:hidden;">
+              <div style="height:100%; width:60%; background:linear-gradient(90deg,var(--cyan),var(--purple)); border-radius:4px; animation: pulse 1.5s ease-in-out infinite;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pane 2: Active Room -->
+        <div id="mock-room-pane" style="display: none;">
+          <div class="mock-interview-room">
+            <div class="video-frame-simulation">
+              <div class="timer-badge" id="mock-timer-display">02:00</div>
+              
+              <div class="ai-avatar-pulse">
+                <i class="bi bi-robot"></i>
+              </div>
+
+              <div class="wave-bars">
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+              </div>
+
+              <div style="font-size: 0.8rem; color: var(--cyan); margin-top: 10px; font-weight: 600;">
+                AI Interviewer is listening...
+              </div>
+            </div>
+
+            <div class="glass-card" style="margin-bottom: 20px;">
+              <div style="font-size: 0.78rem; font-weight: 700; color: var(--cyan); text-transform: uppercase; margin-bottom: 6px;" id="mock-question-counter">
+                Question 1 of 5
+              </div>
+              <h3 style="font-size: 1.2rem; font-weight: 800;" id="mock-current-question-text">
+                Can you introduce yourself and highlight a technical project you are most proud of?
+              </h3>
+            </div>
+
+            <div class="glass-card" style="text-align: left;">
+              <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted);">Your Response (Spoken or Typed):</label>
+              <textarea class="form-control" id="mock-response-input" style="min-height: 100px; margin-top: 8px;" placeholder="Speak into your microphone or type your response here..."></textarea>
+              
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+                <button class="btn-secondary" onclick="resetMockSession()">Cancel Interview</button>
+                <button class="btn-primary" onclick="nextMockQuestion()">Next Question <i class="bi bi-arrow-right"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+             <!-- Pane 3: AI Report Scorecard (dynamic) -->
+        <div id="mock-report-pane" style="display: none; max-width: 740px; margin: 0 auto;">
+          <div class="glass-card" style="margin-bottom:16px; text-align:center; padding:20px;">
+            <div style="font-size: 2.5rem; color: var(--emerald); margin-bottom: 8px;"><i class="bi bi-trophy-fill"></i></div>
+            <h3 style="font-size: 1.4rem; font-weight: 800;">Mock Interview Complete!</h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted);">Gemini AI Evaluation &amp; Detailed Feedback</p>
+          </div>
+          <div id="mock-report-overall" class="glass-card"></div>
+          <button class="btn-primary" onclick="resetMockSession()" style="width:100%; margin-top:16px;">Return to Setup</button>
+        </div>
+      </main>
+
+      <!-- VIEW: Skill Connect -->
+      <main id="view-skillconnect" class="view-content">
+
+        <!-- Guest Registration Banner (shown only to unregistered users) -->
+        <div id="skill-connect-guest-banner" class="glass-card" style="display: none; margin-bottom: 20px; border-left: 4px solid var(--amber, #f59e0b); padding: 16px 20px; background: rgba(245,158,11,0.08);">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <i class="bi bi-person-exclamation" style="font-size: 1.5rem; color: #f59e0b;"></i>
+              <div>
+                <div style="font-size: 0.95rem; font-weight: 800; color: #f59e0b; margin-bottom: 2px;">You're browsing as a Guest</div>
+                <div style="font-size: 0.82rem; color: var(--text-muted);">Register your profile to appear in the Skill Connect network and get matched with real users.</div>
+              </div>
+            </div>
+            <button class="btn-primary trigger-auth-modal" style="font-size: 0.82rem; padding: 8px 18px; white-space: nowrap;">
+              <i class="bi bi-person-plus-fill"></i> Register Now
+            </button>
+          </div>
+        </div>
+
+        <!-- Top Banner: User Skill Exchange Preferences -->
+        <div class="glass-card" style="margin-bottom: 24px; border-left: 4px solid var(--cyan);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+            <div>
+              <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 4px;">
+                ⚡ Skill Exchange Matching Engine
+              </h3>
+              <p style="font-size: 0.84rem; color: var(--text-muted);">
+                Match skills you know with skills you want to learn. Our real-time algorithm connects you with real users for mutual skill exchange & mock practice.
+              </p>
+            </div>
+            <button class="btn-primary btn-accent-purple" id="btn-add-peer-modal" style="font-size: 0.8rem; padding: 8px 14px; white-space: nowrap;">
+              <i class="bi bi-person-plus-fill"></i> + Register Real Peer
+            </button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="color: var(--cyan); font-weight: 700;">
+                🎓 Skills You Know (Skills You Can Offer / Teach):
+              </label>
+              <input type="text" class="form-control" id="user-skills-known" placeholder="e.g. React.js, TypeScript, CSS/Glassmorphism, HTML5">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="color: var(--purple); font-weight: 700;">
+                🧠 Skills You Want (Skills You Want to Learn / Practice):
+              </label>
+              <input type="text" class="form-control" id="user-skills-wanted" placeholder="e.g. System Design, Python, Node.js, Docker">
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+            <button class="btn-primary btn-accent-cyan" id="btn-update-skills-match" style="font-size: 0.84rem; padding: 8px 18px;">
+              <i class="bi bi-arrow-repeat"></i> Update My Skills & Find Matches
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter & Search Controls -->
+        <div style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 220px;">
+            <input type="text" class="form-control" id="peer-search-input" placeholder="🔍 Search real users by name, role, or skill tag...">
+          </div>
+
+          <div style="width: 240px;">
+            <select class="form-control" id="skill-match-filter">
+              <option value="All">All Skill Matches</option>
+              <option value="Mutual" selected>🔥 100% Mutual Skill Exchange</option>
+              <option value="High">⚡ 75%+ High Match</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Peer Grid Container -->
+        <div id="peer-cards-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px;"></div>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Modal: Register New Real Peer Profile -->
+  <div class="modal-overlay" id="add-peer-modal">
+    <div class="modal-content" style="max-width: 540px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+        <h3 style="font-size: 1.2rem; font-weight: 800;">Register Real Peer Profile</h3>
+        <button id="close-peer-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">&times;</button>
+      </div>
+
+      <form id="form-add-peer">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" class="form-control" id="peer-add-name" required placeholder="e.g. Elena Rostova">
+          </div>
+          <div class="form-group">
+            <label>Current Role *</label>
+            <input type="text" class="form-control" id="peer-add-role" required placeholder="e.g. System Architect">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label>Target Company</label>
+            <input type="text" class="form-control" id="peer-add-target" placeholder="e.g. Apple / Netflix">
+          </div>
+          <div class="form-group">
+            <label>Email Contact *</label>
+            <input type="email" class="form-control" id="peer-add-email" required placeholder="elena@example.com">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label style="color: var(--cyan); font-weight: 700;">Skills Known / Offered (Comma separated)</label>
+          <input type="text" class="form-control" id="peer-add-known" required placeholder="e.g. System Design, Kubernetes, Go, PostgreSQL">
+        </div>
+
+        <div class="form-group">
+          <label style="color: var(--purple); font-weight: 700;">Skills Seeking / Wanted (Comma separated)</label>
+          <input type="text" class="form-control" id="peer-add-wanted" required placeholder="e.g. React.js, TypeScript, CSS/Glassmorphism">
+        </div>
+
+        <div class="form-group">
+          <label>Bio / Exchange Note</label>
+          <textarea class="form-control" id="peer-add-bio" style="min-height: 60px;" placeholder="Brief bio about interview preparation goals..."></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+          <button type="submit" class="btn-primary btn-accent-purple" style="width: 100%; justify-content: center;">
+            <i class="bi bi-person-check-fill"></i> Save Peer to Real User Network
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Authentication / Profile Switch -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="font-size: 1.2rem; font-weight: 800;">Register / Sign In</h3>
+        <button id="close-auth-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">&times;</button>
+      </div>
+
+      <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">
+        Enter your details to register your profile in the Skill Connect network so others can find and match with you.
+      </p>
+
+      <form id="form-login">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="login-name" class="form-control" placeholder="e.g. Chetan Kenchappanavar" required>
+        </div>
+
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" id="login-email" class="form-control" placeholder="your.email@example.com" required>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 12px; padding: 12px;">
+          <i class="bi bi-person-check-fill"></i> Register & Join Network
+        </button>
+      </form>
+
+      <div style="text-align: center; margin: 16px 0; font-size: 0.8rem; color: var(--text-dim);">OR</div>
+
+      <button class="btn-secondary" id="btn-guest-login" style="width: 100%; justify-content: center; padding: 10px;">
+        <i class="bi bi-person-fill"></i> Continue as Guest (Browse Only)
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- ═══════════════════════════════════════════════════
+       MODAL: Propose Skill Exchange
+  ════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="propose-exchange-modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+        <div>
+          <h3 style="font-size:1.15rem; font-weight:800; margin-bottom:3px;">
+            <i class="bi bi-arrow-repeat" style="color:var(--cyan); margin-right:8px;"></i>Propose Skill Exchange
+          </h3>
+          <p style="font-size:0.8rem; color:var(--text-muted);">Sending to: <strong id="proposal-to-name" style="color:var(--cyan);"></strong></p>
+        </div>
+        <button id="close-propose-modal" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label style="color:var(--purple); font-weight:700;">Your Message</label>
+        <textarea class="form-control" id="proposal-message" style="min-height:110px; line-height:1.6;" placeholder="Introduce yourself and explain what skills you'd like to exchange..."></textarea>
+      </div>
+
+      <div style="background:rgba(6,182,212,0.06); border:1px solid rgba(6,182,212,0.2); border-radius:10px; padding:12px; margin-bottom:16px; font-size:0.8rem; color:var(--text-muted);">
+        <i class="bi bi-info-circle" style="color:var(--cyan);"></i>
+        The other user will receive your proposal in their <strong style="color:#fff;">Exchange Inbox</strong> and can accept or decline.
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button class="btn-secondary" id="btn-cancel-proposal" style="flex:1; justify-content:center;">Cancel</button>
+        <button class="btn-primary" id="btn-send-proposal" style="flex:2; justify-content:center;">
+          <i class="bi bi-send-fill"></i> Send Proposal
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       PANEL: Exchange Inbox (slide-in from right)
+  ════════════════════════════════════════════════════ -->
+  <div id="inbox-panel" style="
+    position:fixed; top:0; right:0; height:100vh; width:380px; max-width:95vw;
+    background:rgba(10,14,26,0.97); backdrop-filter:blur(20px);
+    border-left:1px solid var(--glass-border);
+    z-index:2000; transform:translateX(100%);
+    transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);
+    display:flex; flex-direction:column; overflow:hidden;">
+
+    <!-- Header -->
+    <div style="padding:20px 20px 16px; border-bottom:1px solid var(--glass-border); flex-shrink:0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h3 style="font-size:1.05rem; font-weight:800; margin-bottom:2px;">
+            <i class="bi bi-inbox-fill" style="color:var(--cyan); margin-right:8px;"></i>Exchange Inbox
+          </h3>
+          <p style="font-size:0.75rem; color:var(--text-muted);">Skill exchange proposals from your network</p>
+        </div>
+        <button id="close-inbox-panel" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div id="inbox-list" style="flex:1; overflow-y:auto; padding:16px;">
+      <div style="text-align:center; padding:40px 20px; color:var(--text-muted);">
+        <i class="bi bi-inbox" style="font-size:2.5rem; display:block; margin-bottom:12px;"></i>
+        <p style="font-size:0.88rem;">Loading proposals…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inbox backdrop -->
+  <div id="inbox-backdrop" style="
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5);
+    z-index:1999; backdrop-filter:blur(2px);" onclick="closeInboxPanel()"></div>
+
+  <!-- ═══════════════════════════════════════════════════
+       MODAL: Gemini API Key Settings
+  ════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="gemini-key-modal">
+    <div class="modal-content" style="max-width:480px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+        <div>
+          <h3 style="font-size:1.15rem; font-weight:800; margin-bottom:3px;">
+            <i class="bi bi-stars" style="color:var(--cyan); margin-right:8px;"></i>Gemini AI Settings
+          </h3>
+          <p style="font-size:0.78rem; color:var(--text-muted);">Connect your Gemini API key to unlock real AI features</p>
+        </div>
+        <button id="close-gemini-key-modal" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+      </div>
+
+      <div style="background:rgba(6,182,212,0.06); border:1px solid rgba(6,182,212,0.2); border-radius:10px; padding:14px; margin-bottom:16px; font-size:0.8rem; color:var(--text-muted); line-height:1.6;">
+        <strong style="color:var(--cyan);">How to get your free key:</strong><br>
+        1. Visit <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--cyan);">aistudio.google.com</a><br>
+        2. Click <strong style="color:#fff;">"Create API Key"</strong><br>
+        3. Copy and paste it below — it's free!
+      </div>
+
+      <div class="form-group">
+        <label style="font-weight:700;">Your Gemini API Key</label>
+        <input type="password" class="form-control" id="gemini-api-key-input" placeholder="AIzaSy..." style="font-family:monospace; letter-spacing:0.05em;">
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:4px;">
+        <button class="btn-secondary" id="btn-clear-gemini-key" style="padding:10px 16px;">
+          <i class="bi bi-trash"></i> Remove
+        </button>
+        <button class="btn-primary" id="btn-save-gemini-key" style="flex:1; justify-content:center;">
+          <i class="bi bi-check-circle-fill"></i> Save &amp; Activate
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts (order matters) -->
+  <script src="app.js"></script>
+  <script src="gemini.js"></script>
+  <script src="dashboard.js"></script>
+  <script src="resume.js"></script>
+  <script src="qna.js"></script>
+  <script src="study.js"></script>
+  <script src="mock.js"></script>
+  <script src="skillconnect.js"></script>
+
+  <script>
+    // ── Wire up propose modal close buttons ──────────────────────────────
+    document.getElementById('close-propose-modal')?.addEventListener('click', () => {
+      document.getElementById('propose-exchange-modal')?.classList.remove('active');
+    });
+    document.getElementById('btn-cancel-proposal')?.addEventListener('click', () => {
+      document.getElementById('propose-exchange-modal')?.classList.remove('active');
+    });
+    document.getElementById('btn-send-proposal')?.addEventListener('click', () => {
+      if (typeof submitExchangeProposal === 'function') submitExchangeProposal();
+    });
+
+    // ── Wire up inbox panel ───────────────────────────────────────────────
+    const inboxPanel    = document.getElementById('inbox-panel');
+    const inboxBackdrop = document.getElementById('inbox-backdrop');
+
+    window.openInboxPanel = function() {
+      inboxPanel.style.transform = 'translateX(0)';
+      inboxBackdrop.style.display = 'block';
+      if (typeof loadInbox === 'function') loadInbox();
+    };
+    window.closeInboxPanel = function() {
+      inboxPanel.style.transform = 'translateX(100%)';
+      inboxBackdrop.style.display = 'none';
+    };
+
+    document.getElementById('btn-open-inbox')?.addEventListener('click', () => {
+      inboxPanel.style.transform === 'translateX(0)' ? closeInboxPanel() : openInboxPanel();
+    });
+    document.getElementById('close-inbox-panel')?.addEventListener('click', closeInboxPanel);
+
+    // ── Poll inbox badge every 6 seconds ─────────────────────────────────
+    setInterval(() => {
+      if (typeof loadInbox === 'function' && InsigniaState?.currentUser?.isRegistered) {
+        loadInbox();
+      }
+    }, 6000);
+  </script>
+</body>
+</html>

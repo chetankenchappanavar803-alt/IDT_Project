@@ -1,0 +1,22 @@
+# Environment variables
+.env
+.env.local
+*.env
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Gemini Antigravity IDE artifacts
+.gemini/
+.agents/
