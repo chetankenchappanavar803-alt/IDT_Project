@@ -117,17 +117,94 @@ function mergePeerLists(existingList = [], newList = []) {
   return Array.from(mergedMap.values());
 }
 
-// Fetch shared peer network from server and merge with local state
+const SUPABASE_PUBLIC_URL = 'https://vllflvfnuohxhnqbazct.supabase.co';
+const SUPABASE_PUBLIC_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsbGZsdmZudW9oeGhucWJhemN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NzY5ODAsImV4cCI6MjEwMDQ1Mjk4MH0.BadUiVFwwZ8-3361AA9Da2KoXlxrz4xPzzIjSWSSPpw';
+
+async function fetchPeersDirectFromSupabase() {
+  try {
+    const res = await fetch(`${SUPABASE_PUBLIC_URL}/rest/v1/peers?select=*&order=created_at.desc`, {
+      headers: {
+        'apikey': SUPABASE_PUBLIC_KEY,
+        'Authorization': `Bearer ${SUPABASE_PUBLIC_KEY}`
+      }
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows)) {
+        return rows.map(p => ({
+          id: p.id,
+          name: p.name,
+          role: p.role || 'Software Engineer',
+          targetCompany: p.target_company || '',
+          email: p.email,
+          location: p.location || '',
+          avatar: p.avatar || (p.name ? p.name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2) : 'US'),
+          status: p.status || 'Active for Skill Exchange',
+          skillsKnown: typeof p.skills_known === 'string' ? JSON.parse(p.skills_known) : p.skills_known || [],
+          skillsWanted: typeof p.skills_wanted === 'string' ? JSON.parse(p.skills_wanted) : p.skills_wanted || [],
+          bio: p.bio || ''
+        }));
+      }
+    }
+  } catch (e) {
+    console.warn('Direct Supabase fetch failed:', e);
+  }
+  return [];
+}
+
+async function postPeerDirectToSupabase(peerPayload) {
+  try {
+    const dbRow = {
+      id: peerPayload.id || ('usr_' + (peerPayload.email || peerPayload.name).toLowerCase().replace(/[^a-z0-9]/g, '_')),
+      name: peerPayload.name,
+      role: peerPayload.role || 'Software Engineer',
+      target_company: peerPayload.targetCompany || '',
+      email: peerPayload.email,
+      location: peerPayload.location || '',
+      avatar: peerPayload.avatar || (peerPayload.name ? peerPayload.name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2) : 'US'),
+      status: peerPayload.status || 'Active for Skill Exchange',
+      skills_known: JSON.stringify(peerPayload.skillsKnown || []),
+      skills_wanted: JSON.stringify(peerPayload.skillsWanted || []),
+      bio: peerPayload.bio || ''
+    };
+
+    await fetch(`${SUPABASE_PUBLIC_URL}/rest/v1/peers?on_conflict=email`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_PUBLIC_KEY,
+        'Authorization': `Bearer ${SUPABASE_PUBLIC_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation,resolution=merge-duplicates'
+      },
+      body: JSON.stringify(dbRow)
+    });
+  } catch (e) {
+    console.warn('Direct Supabase insert failed:', e);
+  }
+}
+
+// Fetch shared peer network from server & Supabase and merge with local state
 async function syncAndRenderPeers(silent = false) {
+  let sharedPeers = [];
+
+  // Try API route first
   try {
     const res = await fetch('/api/peers');
     if (res.ok) {
-      const sharedPeers = await res.json();
-      InsigniaState.peerNetwork = mergePeerLists(InsigniaState.peerNetwork, sharedPeers);
-      saveState();
+      const data = await res.json();
+      if (Array.isArray(data)) sharedPeers = data;
     }
-  } catch (err) {
-    console.warn('Network sync offline, using local state:', err);
+  } catch (err) {}
+
+  // Also fetch directly from Supabase for zero-delay multi-device sync
+  const supaPeers = await fetchPeersDirectFromSupabase();
+  if (supaPeers.length > 0) {
+    sharedPeers = mergePeerLists(sharedPeers, supaPeers);
+  }
+
+  if (sharedPeers.length > 0) {
+    InsigniaState.peerNetwork = mergePeerLists(InsigniaState.peerNetwork, sharedPeers);
+    saveState();
   }
 
   matchAndRenderPeers();
@@ -405,6 +482,9 @@ async function broadcastAccountToServer(accountObj) {
   if (typeof matchAndRenderPeers === 'function') {
     matchAndRenderPeers();
   }
+
+  // Write directly to Supabase from browser for instant zero-delay sync across all devices
+  await postPeerDirectToSupabase(peerPayload);
 
   try {
     const res = await fetch('/api/peers', {

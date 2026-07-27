@@ -44,77 +44,28 @@ ALTER TABLE public.exchanges ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read access on peers" ON public.peers
   FOR SELECT USING (true);
 
--- Allow public insert & update access on peers
+-- Allow public insert, update, delete access on peers
 CREATE POLICY "Allow public insert access on peers" ON public.peers
   FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Allow public update access on peers" ON public.peers
   FOR UPDATE USING (true);
 
+CREATE POLICY "Allow public delete access on peers" ON public.peers
+  FOR DELETE USING (true);
+
 -- Allow public read access on exchanges
 CREATE POLICY "Allow public read access on exchanges" ON public.exchanges
   FOR SELECT USING (true);
 
--- Allow public insert & update access on exchanges
+-- Allow public insert, update, delete access on exchanges
 CREATE POLICY "Allow public insert access on exchanges" ON public.exchanges
   FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Allow public update access on exchanges" ON public.exchanges
   FOR UPDATE USING (true);
 
--- 4. Insert Default Seed Peers
-INSERT INTO public.peers (id, name, role, target_company, email, location, avatar, status, skills_known, skills_wanted, bio)
-VALUES
-  (
-    'usr_1',
-    'Sarah Chen',
-    'Frontend Specialist',
-    'Meta / Google',
-    'sarah.chen@tech.org',
-    'Seattle, WA',
-    'SC',
-    'Active for Skill Exchange',
-    '["React.js", "TypeScript", "CSS/Glassmorphism", "Web Vitals", "UI/UX Design"]'::jsonb,
-    '["System Design", "Node.js", "Python", "Docker", "PostgreSQL"]'::jsonb,
-    '5+ years building frontend user interfaces. Looking to learn backend system design architecture in exchange for React/CSS mastery.'
-  ),
-  (
-    'usr_2',
-    'Marcus Vance',
-    'Backend Architect',
-    'Amazon / Uber',
-    'marcus.vance@backend.io',
-    'Austin, TX',
-    'MV',
-    'Available to Exchange',
-    '["System Design", "Node.js", "Python", "Redis", "PostgreSQL", "Docker", "REST APIs"]'::jsonb,
-    '["React.js", "TypeScript", "CSS/Glassmorphism", "UI Design", "Frontend Performance"]'::jsonb,
-    'Distributed systems backend developer. Eager to partner with frontend devs to learn modern React/Glassmorphism UI skills.'
-  ),
-  (
-    'usr_3',
-    'Priya Sharma',
-    'Data Scientist & AI Developer',
-    'Microsoft / OpenAI',
-    'priya.sharma@ai.edu',
-    'New York, NY',
-    'PS',
-    'Seeking Exchange Partner',
-    '["Python", "PyTorch", "Machine Learning", "SQL", "A/B Testing", "Data Pipelines"]'::jsonb,
-    '["React.js", "System Design", "Node.js", "TypeScript", "Docker"]'::jsonb,
-    'Machine learning practitioner building AI interview agents. Offering ML/Python mentoring for Full Stack & System Design help.'
-  ),
-  (
-    'usr_4',
-    'David Miller',
-    'Full Stack Engineer',
-    'Stripe / Airbnb',
-    'david.miller@devnet.com',
-    'San Francisco, CA',
-    'DM',
-    'Active for Skill Exchange',
-    '["Node.js", "GraphQL", "PostgreSQL", "Docker", "REST APIs", "TypeScript"]'::jsonb,
-    '["System Design", "Python", "PyTorch", "CSS/Glassmorphism", "Web Vitals"]'::jsonb,
-    'Fullstack engineer focused on backend infrastructure. Looking for ML & Glassmorphism experts for mutual interview prep.'
-  )
-ON CONFLICT (email) DO NOTHING;
+CREATE POLICY "Allow public delete access on exchanges" ON public.exchanges
+  FOR DELETE USING (true);
+
+-- 4. Clean Table Setup Ready for Real User Registration
