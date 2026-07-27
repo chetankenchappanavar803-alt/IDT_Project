@@ -89,13 +89,18 @@ module.exports = async (req, res) => {
     return res.status(204).end();
   }
 
+  // Extract query params & path
+  const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  const queryEmail = req.query?.email || urlObj.searchParams.get('email');
+
   // GET /api/exchanges?email=xxx
   if (req.method === 'GET') {
-    const email = req.query.email;
-
     try {
-      if (process.env.SUPABASE_URL && process.env.SUPABASE_KEY && email) {
-        const query = `exchanges?or=(to_email.eq.${encodeURIComponent(email)},from_email.eq.${encodeURIComponent(email)})&order=created_at.desc`;
+      if (process.env.SUPABASE_URL && process.env.SUPABASE_KEY) {
+        let query = 'exchanges?select=*&order=created_at.desc';
+        if (queryEmail) {
+          query = `exchanges?or=(to_email.eq.${encodeURIComponent(queryEmail)},from_email.eq.${encodeURIComponent(queryEmail)})&order=created_at.desc`;
+        }
         const supaEx = await supabaseRequest(query);
         if (Array.isArray(supaEx)) {
           return res.status(200).json(formatSupabaseExchanges(supaEx));
@@ -106,8 +111,8 @@ module.exports = async (req, res) => {
     }
 
     let local = getLocalExchanges();
-    if (email) {
-      local = local.filter(e => e.toEmail === email || e.fromEmail === email);
+    if (queryEmail) {
+      local = local.filter(e => e.toEmail === queryEmail || e.fromEmail === queryEmail);
     }
     return res.status(200).json(local);
   }
@@ -120,7 +125,7 @@ module.exports = async (req, res) => {
     }
 
     if (!proposal || !proposal.fromEmail || !proposal.toEmail) {
-      return res.status(400).json({ error: 'Invalid proposal data' });
+      return res.status(400).json({ error: 'Sender and recipient email are required' });
     }
 
     const newProposal = {
@@ -142,7 +147,7 @@ module.exports = async (req, res) => {
           to_name: newProposal.toName,
           to_email: newProposal.toEmail,
           to_peer_id: newProposal.toPeerId || '',
-          message: newProposal.message,
+          message: newProposal.message || 'I would love to connect for a skill exchange!',
           status: 'pending'
         };
         await supabaseRequest('exchanges', 'POST', dbRow);
@@ -154,9 +159,11 @@ module.exports = async (req, res) => {
     return res.status(200).json({ success: true, proposal: newProposal });
   }
 
-  // PATCH /api/exchanges?id=xxx  (accept or decline)
+  // PATCH /api/exchanges/:id  (accept or decline)
   if (req.method === 'PATCH') {
-    const id = req.query.id || req.url.split('/api/exchanges/')[1];
+    let id = req.query?.id || urlObj.searchParams.get('id') || urlObj.pathname.split('/api/exchanges/')[1];
+    if (id && id.includes('?')) id = id.split('?')[0];
+
     let body = req.body;
     if (typeof body === 'string') {
       try { body = JSON.parse(body); } catch (e) {}
@@ -164,7 +171,7 @@ module.exports = async (req, res) => {
 
     const status = body?.status;
     if (!id || !status) {
-      return res.status(400).json({ error: 'Exchange ID and status required' });
+      return res.status(400).json({ error: 'Exchange ID and status are required' });
     }
 
     try {
