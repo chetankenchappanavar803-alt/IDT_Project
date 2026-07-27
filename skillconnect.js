@@ -102,11 +102,13 @@ function matchAndRenderPeers() {
   const userKnown = (user.skillsKnown || []).map(s => s.toLowerCase());
   const userWanted = (user.skillsWanted || []).map(s => s.toLowerCase());
 
-  // Filter out self if present in peer list (match by email or id)
-  const peers = (InsigniaState.peerNetwork || []).filter(p => {
-    if (user.email && p.email && p.email === user.email) return false;
-    if (user.id && p.id && p.id === user.id) return false;
-    return true;
+  // Tag peers including self (mark isSelf: true)
+  const peers = (InsigniaState.peerNetwork || []).map(p => {
+    const isSelf = Boolean(
+      (user.email && p.email && p.email.toLowerCase() === user.email.toLowerCase()) ||
+      (user.id && p.id && p.id === user.id)
+    );
+    return { ...p, isSelf };
   });
 
   const filterVal = document.getElementById('skill-match-filter')?.value || 'All';
@@ -114,6 +116,17 @@ function matchAndRenderPeers() {
 
   // Compute Match Details for each peer
   const matchedPeers = peers.map(peer => {
+    if (peer.isSelf) {
+      return {
+        ...peer,
+        theyCanTeachYou: [],
+        youCanTeachThem: [],
+        matchPercentage: 999, // Pin self to top
+        matchType: 'Your Profile',
+        badgeClass: 'badge-mutual'
+      };
+    }
+
     const peerKnown = (peer.skillsKnown || []).map(s => s.toLowerCase());
     const peerWanted = (peer.skillsWanted || []).map(s => s.toLowerCase());
 
@@ -155,15 +168,15 @@ function matchAndRenderPeers() {
     };
   });
 
-  // Sort by highest match score
+  // Sort by highest match score (self is pinned to top)
   matchedPeers.sort((a, b) => b.matchPercentage - a.matchPercentage);
 
   // Apply Filter & Search Query
   let filtered = matchedPeers;
   if (filterVal === 'Mutual') {
-    filtered = filtered.filter(p => p.matchPercentage === 100);
+    filtered = filtered.filter(p => p.isSelf || p.matchPercentage === 100);
   } else if (filterVal === 'High') {
-    filtered = filtered.filter(p => p.matchPercentage >= 75);
+    filtered = filtered.filter(p => p.isSelf || p.matchPercentage >= 75);
   }
 
   if (queryVal) {
@@ -194,23 +207,25 @@ function renderPeerGrid(peers) {
   }
 
   container.innerHTML = peers.map(p => `
-    <div class="glass-card peer-match-card" style="padding: 22px; display: flex; flex-direction: column; justify-content: space-between;">
+    <div class="glass-card peer-match-card" style="padding: 22px; display: flex; flex-direction: column; justify-content: space-between; ${p.isSelf ? 'border: 2px solid var(--cyan); background: rgba(6,182,212,0.06);' : ''}">
       <div>
         <!-- Match Header Badge -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-          <div class="match-score-pill ${p.badgeClass}">
-            ${p.matchPercentage === 100 ? '🔥 100% Mutual Match' : p.matchPercentage === 75 ? '⚡ 75% High Match' : p.matchPercentage === 50 ? '💡 50% Skill Match' : '🌐 30% Peer'}
+          <div class="match-score-pill ${p.isSelf ? 'badge-mutual' : p.badgeClass}">
+            ${p.isSelf ? '⭐ YOU (Your Profile)' : p.matchPercentage === 100 ? '🔥 100% Mutual Match' : p.matchPercentage === 75 ? '⚡ 75% High Match' : p.matchPercentage === 50 ? '💡 50% Skill Match' : '🌐 30% Peer'}
           </div>
           <span style="font-size: 0.72rem; color: var(--emerald); font-weight: 700;">🟢 ${escapeHTML(p.status || 'Active Account')}</span>
         </div>
 
         <!-- User Avatar & Header -->
         <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 16px;">
-          <div class="peer-avatar-circle">
-            ${escapeHTML(p.avatar || p.name.substring(0,2).toUpperCase())}
+          <div class="peer-avatar-circle" style="${p.isSelf ? 'background: linear-gradient(135deg,var(--cyan),var(--purple)); color:#fff;' : ''}">
+            ${escapeHTML(p.avatar || (p.name ? p.name.substring(0,2).toUpperCase() : 'US'))}
           </div>
           <div>
-            <h4 style="font-size: 1.1rem; font-weight: 800; color: #fff;">${escapeHTML(p.name)}</h4>
+            <h4 style="font-size: 1.1rem; font-weight: 800; color: #fff;">
+              ${escapeHTML(p.name)} ${p.isSelf ? '<span style="font-size:0.75rem; color:var(--cyan); font-weight:600;">(You)</span>' : ''}
+            </h4>
             <p style="font-size: 0.8rem; color: var(--text-muted);">${escapeHTML(p.role || 'Job Seeker')} ${p.targetCompany ? `• Target: <strong style="color: var(--cyan);">${escapeHTML(p.targetCompany)}</strong>` : ''}</p>
           </div>
         </div>
@@ -226,7 +241,7 @@ function renderPeerGrid(peers) {
           
           <div style="margin-bottom: 10px;">
             <div style="font-size: 0.75rem; font-weight: 700; color: var(--cyan); text-transform: uppercase; margin-bottom: 4px;">
-              🎓 They Can Teach You (Skills They Know):
+              🎓 Skills Known / Offering:
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 6px;">
               ${((p.theyCanTeachYou && p.theyCanTeachYou.length > 0) ? p.theyCanTeachYou : (p.skillsKnown || [])).map(s => `
@@ -239,7 +254,7 @@ function renderPeerGrid(peers) {
 
           <div>
             <div style="font-size: 0.75rem; font-weight: 700; color: var(--purple); text-transform: uppercase; margin-bottom: 4px;">
-              🧠 You Can Teach Them (Skills They Want):
+              🧠 Skills Wanted / Learning:
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 6px;">
               ${((p.youCanTeachThem && p.youCanTeachThem.length > 0) ? p.youCanTeachThem : (p.skillsWanted || [])).map(s => `
@@ -255,12 +270,18 @@ function renderPeerGrid(peers) {
 
       <!-- Action Buttons -->
       <div style="display: flex; gap: 8px; margin-top: 12px;">
-        <button class="btn-primary" style="flex: 1; font-size: 0.8rem; padding: 10px 12px;" onclick="proposeSkillExchange('${escapeHTML(p.name)}', '${p.id}', '${escapeHTML(p.email || '')}')">
-          <i class="bi bi-arrow-repeat"></i> Propose Exchange
-        </button>
-        <button class="btn-secondary" style="font-size: 0.8rem; padding: 10px 12px;" onclick="sendMessagePeer('${escapeHTML(p.name)}')">
-          <i class="bi bi-chat-dots-fill"></i>
-        </button>
+        ${p.isSelf ? `
+          <button class="btn-secondary trigger-auth-modal" style="flex: 1; font-size: 0.8rem; padding: 10px 12px;">
+            <i class="bi bi-pencil-square" style="color:var(--cyan);"></i> Edit My Profile
+          </button>
+        ` : `
+          <button class="btn-primary" style="flex: 1; font-size: 0.8rem; padding: 10px 12px;" onclick="proposeSkillExchange('${escapeHTML(p.name)}', '${p.id}', '${escapeHTML(p.email || '')}')">
+            <i class="bi bi-arrow-repeat"></i> Propose Exchange
+          </button>
+          <button class="btn-secondary" style="font-size: 0.8rem; padding: 10px 12px;" onclick="sendMessagePeer('${escapeHTML(p.name)}')">
+            <i class="bi bi-chat-dots-fill"></i>
+          </button>
+        `}
       </div>
     </div>
   `).join('');
