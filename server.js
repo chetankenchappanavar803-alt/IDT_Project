@@ -289,13 +289,20 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // API Route: GET /api/exchanges?email=xxx (get proposals for a user)
+  // API Route: GET /api/exchanges?email=xxx&peerId=yyy (get proposals for a user)
   if (req.url.startsWith('/api/exchanges') && req.method === 'GET') {
     const urlObj = new URL(req.url, `http://${req.headers.host}`);
-    const email = urlObj.searchParams.get('email');
+    const email = (urlObj.searchParams.get('email') || '').trim().toLowerCase();
+    const peerId = (urlObj.searchParams.get('peerId') || '').trim();
     let exchanges = getExchanges();
-    if (email) {
-      exchanges = exchanges.filter(e => e.toEmail === email || e.fromEmail === email);
+    if (email || peerId) {
+      exchanges = exchanges.filter(e => {
+        const toEmailMatch = email && e.toEmail && e.toEmail.trim().toLowerCase() === email;
+        const fromEmailMatch = email && e.fromEmail && e.fromEmail.trim().toLowerCase() === email;
+        const toIdMatch = peerId && e.toPeerId === peerId;
+        const fromIdMatch = peerId && e.fromPeerId === peerId;
+        return toEmailMatch || fromEmailMatch || toIdMatch || fromIdMatch;
+      });
     }
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(exchanges));
@@ -311,11 +318,14 @@ const server = http.createServer((req, res) => {
         const proposal = JSON.parse(body);
         const exchanges = getExchanges();
 
+        const fromEmailLower = (proposal.fromEmail || '').trim().toLowerCase();
+        const toEmailLower = (proposal.toEmail || '').trim().toLowerCase();
+
         // Prevent duplicate pending proposals between same pair
         const duplicate = exchanges.find(e =>
-          e.fromEmail === proposal.fromEmail &&
-          e.toEmail === proposal.toEmail &&
-          e.status === 'pending'
+          e.status === 'pending' &&
+          ((e.fromEmail && e.fromEmail.trim().toLowerCase() === fromEmailLower && e.toEmail && e.toEmail.trim().toLowerCase() === toEmailLower) ||
+           (proposal.toPeerId && e.toPeerId === proposal.toPeerId && proposal.fromEmail && e.fromEmail.trim().toLowerCase() === fromEmailLower))
         );
         if (duplicate) {
           res.writeHead(409, { 'Content-Type': 'application/json' });

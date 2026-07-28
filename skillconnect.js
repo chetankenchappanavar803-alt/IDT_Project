@@ -559,13 +559,15 @@ let currentProposalTarget = null;
 
 window.proposeSkillExchange = function(name, id, email) {
   const user = InsigniaState.currentUser;
-  if (!user.isRegistered || !user.email) {
-    showToast('Please register your profile first to send an exchange proposal!', 'warning');
+  if (!user.email || user.isGuest) {
+    showToast('Please register your profile name & email first to send an exchange proposal!', 'warning');
     document.getElementById('auth-modal')?.classList.add('active');
     return;
   }
 
-  currentProposalTarget = { name, id, email };
+  const targetEmail = (email && email.trim()) ? email.trim() : `${(name || 'user').toLowerCase().replace(/[^a-z0-9]/g, '')}@gmail.com`;
+
+  currentProposalTarget = { name, id, email: targetEmail };
 
   const modal = document.getElementById('propose-exchange-modal');
   const toName = document.getElementById('proposal-to-name');
@@ -593,6 +595,7 @@ async function submitExchangeProposal() {
   const proposal = {
     fromName: user.name,
     fromEmail: user.email,
+    fromPeerId: user.id || ('usr_' + user.email.toLowerCase().replace(/[^a-z0-9]/g, '_')),
     fromAvatar: user.name ? user.name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2) : 'US',
     fromSkillsKnown: user.skillsKnown || [],
     fromSkillsWanted: user.skillsWanted || [],
@@ -611,13 +614,13 @@ async function submitExchangeProposal() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(proposal)
     });
-    const data = await res.json();
 
     if (res.status === 409) {
       showToast('You already have a pending proposal with this user!', 'warning');
     } else if (res.ok) {
       showToast(`✅ Proposal sent to ${currentProposalTarget.name}!`, 'success');
       document.getElementById('propose-exchange-modal')?.classList.remove('active');
+      loadInbox();
     } else {
       showToast('Failed to send proposal. Try again.', 'warning');
     }
@@ -636,14 +639,16 @@ async function loadInbox() {
   const container = document.getElementById('inbox-list');
 
   if (!user || !user.email) {
+    const badge = document.getElementById('inbox-badge');
+    if (badge) badge.style.display = 'none';
     if (container) {
       container.innerHTML = `
         <div style="text-align:center; padding: 40px 20px; color: var(--text-muted);">
           <i class="bi bi-person-lock" style="font-size: 2.5rem; display:block; margin-bottom:12px; color: var(--amber);"></i>
-          <h4 style="font-size: 0.95rem; font-weight:700; color: #fff; margin-bottom: 6px;">Profile Registration Required</h4>
-          <p style="font-size:0.82rem; margin-bottom:16px;">Set up your profile name &amp; email to send and receive skill exchange proposals.</p>
+          <h4 style="font-size: 0.95rem; font-weight:700; color: #fff; margin-bottom: 6px;">Profile Setup Required</h4>
+          <p style="font-size:0.82rem; margin-bottom:16px;">Set up your profile email to send and receive skill exchange proposals.</p>
           <button class="btn-primary trigger-auth-modal" style="font-size:0.8rem; padding:8px 16px;">
-            <i class="bi bi-person-circle"></i> Profile Setup
+            <i class="bi bi-person-circle"></i> Login / Register Profile
           </button>
         </div>`;
     }
@@ -651,11 +656,17 @@ async function loadInbox() {
   }
 
   try {
-    const res = await fetch(`/api/exchanges?email=${encodeURIComponent(user.email)}`);
+    const peerIdQuery = user.id ? `&peerId=${encodeURIComponent(user.id)}` : '';
+    const res = await fetch(`/api/exchanges?email=${encodeURIComponent(user.email)}${peerIdQuery}`);
     if (!res.ok) return;
     const exchanges = await res.json();
 
-    const pendingReceived = exchanges.filter(e => e.toEmail === user.email && e.status === 'pending');
+    const userLowerEmail = (user.email || '').toLowerCase().trim();
+    const pendingReceived = exchanges.filter(e => {
+      const isToMe = (e.toEmail && e.toEmail.toLowerCase().trim() === userLowerEmail) || (user.id && e.toPeerId === user.id);
+      return isToMe && e.status === 'pending';
+    });
+
     const badge = document.getElementById('inbox-badge');
     if (badge) {
       badge.textContent = pendingReceived.length;
@@ -673,8 +684,9 @@ function renderInbox(exchanges) {
   if (!container) return;
 
   const user = InsigniaState.currentUser;
+  const userLowerEmail = (user.email || '').toLowerCase().trim();
 
-  if (exchanges.length === 0) {
+  if (!exchanges || exchanges.length === 0) {
     container.innerHTML = `
       <div style="text-align:center; padding: 40px 20px; color: var(--text-muted);">
         <i class="bi bi-inbox" style="font-size: 2.5rem; display:block; margin-bottom:12px;"></i>
@@ -684,7 +696,7 @@ function renderInbox(exchanges) {
   }
 
   container.innerHTML = exchanges.map(e => {
-    const isIncoming = e.toEmail === user.email;
+    const isIncoming = (e.toEmail && e.toEmail.toLowerCase().trim() === userLowerEmail) || (user.id && e.toPeerId === user.id);
     const otherName = isIncoming ? e.fromName : e.toName;
     const otherAvatar = isIncoming ? (e.fromAvatar || e.fromName?.substring(0,2).toUpperCase()) : (e.toAvatar || e.toName?.substring(0,2).toUpperCase());
     const statusColor = e.status === 'accepted' ? 'var(--emerald)' : e.status === 'declined' ? '#ef4444' : 'var(--amber, #f59e0b)';
