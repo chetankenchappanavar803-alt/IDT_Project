@@ -81,24 +81,44 @@ function setupFilterListeners() {
   }
 }
 
+const WIPED_IDS = [
+  'usr_1', 'usr_2', 'usr_3', 'usr_4', 'usr_test',
+  'usr_shankaragoudapatil0406_gmail_com',
+  'usr_chetan_gmail_com',
+  'usr_suhas_gmail_com',
+  'usr_none_gmail_com'
+];
+
+function isPeerValid(p) {
+  if (!p || !p.id || !p.name) return false;
+  if (WIPED_IDS.includes(p.id)) return false;
+  if (p.email) {
+    const e = p.email.toLowerCase();
+    if (e.includes('tech.org') || e.includes('backend.io') || e.includes('ai.edu') || e.includes('devnet.com') || e.includes('example.com')) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function mergePeerLists(existingList = [], newList = []) {
   const mergedMap = new Map();
 
-  // Add existing local list first
-  (existingList || []).forEach(p => {
+  // Add existing local list first (filtering out wiped/test IDs)
+  (existingList || []).filter(isPeerValid).forEach(p => {
     if (p && p.email) mergedMap.set(p.email.toLowerCase(), p);
     else if (p && p.id) mergedMap.set(p.id, p);
   });
 
-  // Merge with server list
-  (newList || []).forEach(p => {
+  // Merge with server list (filtering out wiped/test IDs)
+  (newList || []).filter(isPeerValid).forEach(p => {
     if (p && p.email) mergedMap.set(p.email.toLowerCase(), p);
     else if (p && p.id) mergedMap.set(p.id, p);
   });
 
   // Ensure current registered user is always present in network
   const user = InsigniaState.currentUser;
-  if (user && user.isRegistered && user.email) {
+  if (user && user.isRegistered && user.email && !user.isGuest) {
     const userPeer = {
       id: user.id || ('usr_' + user.email.toLowerCase().replace(/[^a-z0-9]/g, '_')),
       name: user.name,
@@ -116,6 +136,19 @@ function mergePeerLists(existingList = [], newList = []) {
 
   return Array.from(mergedMap.values());
 }
+
+function vanishAllProfiles() {
+  InsigniaState.peerNetwork = [];
+  const user = InsigniaState.currentUser;
+  if (user && user.isRegistered && user.email && !user.isGuest) {
+    InsigniaState.peerNetwork = mergePeerLists([], []);
+  }
+  saveState();
+  syncAndRenderPeers();
+  showToast('🧹 All test & stale profiles vanished! Network reset to active accounts.', 'info');
+}
+window.vanishAllProfiles = vanishAllProfiles;
+
 
 const SUPABASE_PUBLIC_URL = 'https://vllflvfnuohxhnqbazct.supabase.co';
 const SUPABASE_PUBLIC_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsbGZsdmZudW9oeGhucWJhemN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NzY5ODAsImV4cCI6MjEwMDQ1Mjk4MH0.BadUiVFwwZ8-3361AA9Da2KoXlxrz4xPzzIjSWSSPpw';
@@ -340,7 +373,7 @@ function renderPeerGrid(peers) {
         </div>
 
         <!-- User Avatar & Header -->
-        <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 16px;">
+        <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 16px; cursor: pointer;" onclick="openPeerProfileModal('${p.id}')">
           <div class="peer-avatar-circle" style="${p.isSelf ? 'background: linear-gradient(135deg,var(--cyan),var(--purple)); color:#fff;' : ''}">
             ${escapeHTML(p.avatar || (p.name ? p.name.substring(0,2).toUpperCase() : 'US'))}
           </div>
@@ -353,7 +386,7 @@ function renderPeerGrid(peers) {
         </div>
 
         ${p.bio ? `
-          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px; font-style: italic; line-height: 1.4;">
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px; font-style: italic; line-height: 1.4; cursor: pointer;" onclick="openPeerProfileModal('${p.id}')">
             "${escapeHTML(p.bio)}"
           </p>
         ` : ''}
@@ -398,10 +431,13 @@ function renderPeerGrid(peers) {
           </button>
         ` : `
           <button class="btn-primary" style="flex: 1; font-size: 0.8rem; padding: 10px 12px;" onclick="proposeSkillExchange('${escapeHTML(p.name)}', '${p.id}', '${escapeHTML(p.email || '')}')">
-            <i class="bi bi-arrow-repeat"></i> Propose Exchange
+            <i class="bi bi-arrow-repeat"></i> Propose
           </button>
-          <button class="btn-secondary" style="font-size: 0.8rem; padding: 10px 12px;" onclick="sendMessagePeer('${escapeHTML(p.name)}')">
+          <button class="btn-secondary" style="font-size: 0.8rem; padding: 10px 12px;" title="Direct Message" onclick="sendMessagePeer('${escapeHTML(p.name)}', '${escapeHTML(p.email || '')}', '${p.id}')">
             <i class="bi bi-chat-dots-fill"></i>
+          </button>
+          <button class="btn-secondary" style="font-size: 0.8rem; padding: 10px 12px;" title="View Full Profile" onclick="openPeerProfileModal('${p.id}')">
+            <i class="bi bi-eye-fill"></i>
           </button>
         `}
       </div>
@@ -706,8 +742,159 @@ window.respondToExchange = async function(id, status) {
 window.submitExchangeProposal = submitExchangeProposal;
 window.loadInbox = loadInbox;
 
-window.sendMessagePeer = function(name) {
-  showToast(`Message feature coming soon — use Propose Exchange to connect with ${name}!`, 'info');
+let currentChatPeer = null;
+
+window.sendMessagePeer = function(name, email, peerId) {
+  const user = InsigniaState.currentUser;
+  if (!user || !user.email || user.isGuest) {
+    showToast('Please register your profile first to send messages to peers!', 'warning');
+    document.getElementById('auth-modal')?.classList.add('active');
+    return;
+  }
+
+  currentChatPeer = { name, email, id: peerId };
+  const modal = document.getElementById('peer-direct-chat-modal');
+  const titleName = document.getElementById('chat-peer-name');
+  if (titleName) titleName.textContent = name;
+
+  renderChatMessages(peerId);
+  modal?.classList.add('active');
+};
+
+function renderChatMessages(peerId) {
+  const container = document.getElementById('chat-messages-container');
+  if (!container) return;
+
+  InsigniaState.peerMessages = InsigniaState.peerMessages || {};
+  const msgs = InsigniaState.peerMessages[peerId] || [
+    { sender: 'peer', text: `Hi! Thanks for connecting with me on Skill Connect. What skills would you like to practice together?`, time: 'Just now' }
+  ];
+  InsigniaState.peerMessages[peerId] = msgs;
+  saveState();
+
+  container.innerHTML = msgs.map(m => `
+    <div style="display: flex; justify-content: ${m.sender === 'you' ? 'flex-end' : 'flex-start'}; margin-bottom: 10px;">
+      <div style="max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 0.84rem; line-height: 1.4; ${m.sender === 'you' ? 'background: linear-gradient(135deg, var(--cyan), #0284c7); color: #fff;' : 'background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: #fff;'}">
+        <div>${escapeHTML(m.text)}</div>
+        <div style="font-size: 0.68rem; opacity: 0.7; text-align: right; margin-top: 4px;">${escapeHTML(m.time)}</div>
+      </div>
+    </div>
+  `).join('');
+
+  container.scrollTop = container.scrollHeight;
+}
+
+window.sendDirectChatMessage = function() {
+  const input = document.getElementById('chat-message-input');
+  if (!input || !currentChatPeer) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  InsigniaState.peerMessages = InsigniaState.peerMessages || {};
+  InsigniaState.peerMessages[currentChatPeer.id] = InsigniaState.peerMessages[currentChatPeer.id] || [];
+  InsigniaState.peerMessages[currentChatPeer.id].push({ sender: 'you', text, time: timeStr });
+  saveState();
+
+  input.value = '';
+  renderChatMessages(currentChatPeer.id);
+
+  // Auto response simulation
+  setTimeout(() => {
+    if (currentChatPeer) {
+      const peerReplies = [
+        `Awesome! I am active and ready for a skill exchange. Let's schedule a mock session soon!`,
+        `That sounds great. I've seen your profile skills and I'm looking forward to learning from you!`,
+        `Got it! Feel free to send me an exchange proposal in Skill Connect so we can track our practice.`
+      ];
+      const randomReply = peerReplies[Math.floor(Math.random() * peerReplies.length)];
+      InsigniaState.peerMessages[currentChatPeer.id].push({ sender: 'peer', text: randomReply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+      saveState();
+      renderChatMessages(currentChatPeer.id);
+    }
+  }, 1200);
+};
+
+window.openPeerProfileModal = function(peerId) {
+  const user = InsigniaState.currentUser;
+  let peer = null;
+
+  if (user && (user.id === peerId || peerId === 'self')) {
+    peer = {
+      id: user.id || 'self',
+      name: user.name,
+      role: user.targetTitle || user.role || 'Software Engineer',
+      targetCompany: user.targetCompany || 'Tech Enterprise',
+      email: user.email || 'Registered User',
+      location: user.location || 'Remote',
+      avatar: user.name ? user.name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2) : 'US',
+      status: 'Active Account (You)',
+      skillsKnown: user.skillsKnown || [],
+      skillsWanted: user.skillsWanted || [],
+      bio: user.bio || 'Active job seeker on Insignia'
+    };
+  } else {
+    peer = (InsigniaState.peerNetwork || []).find(p => p.id === peerId);
+  }
+
+  if (!peer) {
+    showToast('Profile details not found', 'warning');
+    return;
+  }
+
+  const modal = document.getElementById('peer-details-modal');
+  if (!modal) return;
+
+  const avatarEl = document.getElementById('modal-peer-avatar');
+  const nameEl = document.getElementById('modal-peer-name');
+  const roleEl = document.getElementById('modal-peer-role');
+  const statusEl = document.getElementById('modal-peer-status');
+  const emailEl = document.getElementById('modal-peer-email');
+  const locationEl = document.getElementById('modal-peer-location');
+  const bioEl = document.getElementById('modal-peer-bio');
+
+  if (avatarEl) avatarEl.textContent = peer.avatar || peer.name.substring(0,2).toUpperCase();
+  if (nameEl) nameEl.textContent = peer.name;
+  if (roleEl) roleEl.textContent = `${peer.role} ${peer.targetCompany ? '• ' + peer.targetCompany : ''}`;
+  if (statusEl) statusEl.textContent = `🟢 ${peer.status || 'Active for Exchange'}`;
+  if (emailEl) emailEl.textContent = peer.email || 'Hidden Email';
+  if (locationEl) locationEl.textContent = peer.location || 'Remote / Worldwide';
+  if (bioEl) bioEl.textContent = peer.bio ? `"${peer.bio}"` : 'No bio provided yet.';
+
+  const knownContainer = document.getElementById('modal-peer-known');
+  if (knownContainer) {
+    knownContainer.innerHTML = (peer.skillsKnown && peer.skillsKnown.length > 0)
+      ? peer.skillsKnown.map(s => `<span class="skill-pill-offer">${escapeHTML(s)}</span>`).join('')
+      : '<span style="color:var(--text-muted); font-size:0.8rem;">No skills specified</span>';
+  }
+
+  const wantedContainer = document.getElementById('modal-peer-wanted');
+  if (wantedContainer) {
+    wantedContainer.innerHTML = (peer.skillsWanted && peer.skillsWanted.length > 0)
+      ? peer.skillsWanted.map(s => `<span class="skill-pill-want">${escapeHTML(s)}</span>`).join('')
+      : '<span style="color:var(--text-muted); font-size:0.8rem;">No skills specified</span>';
+  }
+
+  const actionsContainer = document.getElementById('modal-peer-actions');
+  if (actionsContainer) {
+    const isSelf = user && user.email && peer.email && (user.email.toLowerCase() === peer.email.toLowerCase());
+    if (isSelf) {
+      actionsContainer.innerHTML = `
+        <button class="btn-secondary trigger-auth-modal" style="width:100%; font-size:0.84rem; padding:10px;" onclick="document.getElementById('peer-details-modal')?.classList.remove('active');">
+          <i class="bi bi-pencil-square"></i> Edit My Profile
+        </button>`;
+    } else {
+      actionsContainer.innerHTML = `
+        <button class="btn-primary" style="flex:1; font-size:0.84rem; padding:10px;" onclick="document.getElementById('peer-details-modal')?.classList.remove('active'); proposeSkillExchange('${escapeHTML(peer.name)}', '${peer.id}', '${escapeHTML(peer.email || '')}');">
+          <i class="bi bi-arrow-repeat"></i> Propose Exchange
+        </button>
+        <button class="btn-secondary" style="flex:1; font-size:0.84rem; padding:10px;" onclick="document.getElementById('peer-details-modal')?.classList.remove('active'); sendMessagePeer('${escapeHTML(peer.name)}', '${escapeHTML(peer.email || '')}', '${peer.id}');">
+          <i class="bi bi-chat-dots-fill"></i> Direct Message
+        </button>`;
+    }
+  }
+
+  modal.classList.add('active');
 };
 
 function escapeHTML(str) {
@@ -717,3 +904,4 @@ function escapeHTML(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
+
