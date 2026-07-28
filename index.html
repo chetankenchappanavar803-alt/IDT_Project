@@ -80,12 +80,6 @@
           <i class="bi bi-person-gear"></i>
           <span>Profile Setup</span>
         </button>
-
-        <button class="nav-btn" id="btn-open-inbox" style="position:relative;">
-          <i class="bi bi-inbox-fill"></i>
-          <span>Exchange Inbox</span>
-          <span id="inbox-badge" style="display:none; position:absolute; top:6px; right:10px; background:#ef4444; color:#fff; font-size:0.65rem; font-weight:800; min-width:18px; height:18px; border-radius:50%; align-items:center; justify-content:center; line-height:1;">0</span>
-        </button>
       </nav>
 
       <div class="sidebar-footer">
@@ -922,37 +916,71 @@
     </div>
   </div>
 
-  <!-- Modal: Authentication / Profile Switch -->
+  <!-- Modal: Authentication / Profile Switch (Email & Password) -->
   <div class="modal-overlay" id="auth-modal">
-    <div class="modal-content">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3 style="font-size: 1.2rem; font-weight: 800;">Register / Sign In</h3>
+    <div class="modal-content" style="max-width: 440px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 1.2rem; font-weight: 800;" id="auth-modal-title">Sign In</h3>
         <button id="close-auth-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">&times;</button>
       </div>
 
-      <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">
-        Enter your details to register your profile in the Skill Connect network so others can find and match with you.
-      </p>
+      <!-- Auth Toggle Tabs -->
+      <div style="display: flex; gap: 8px; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 10px; border: 1px solid var(--glass-border);">
+        <button id="tab-auth-login" class="btn-primary" style="flex: 1; justify-content: center; padding: 8px; font-size: 0.82rem;" onclick="switchAuthTab('login')">
+          <i class="bi bi-box-arrow-in-right"></i> Sign In
+        </button>
+        <button id="tab-auth-register" class="btn-secondary" style="flex: 1; justify-content: center; padding: 8px; font-size: 0.82rem;" onclick="switchAuthTab('register')">
+          <i class="bi bi-person-plus-fill"></i> Register
+        </button>
+      </div>
 
+      <!-- Login Form -->
       <form id="form-login">
         <div class="form-group">
-          <label>Full Name *</label>
-          <input type="text" id="login-name" class="form-control" placeholder="e.g. Chetan Kenchappanavar" required>
+          <label style="font-weight:700;">Email Address *</label>
+          <input type="email" id="login-email" class="form-control" placeholder="user@gmail.com" required>
         </div>
 
         <div class="form-group">
-          <label>Email Address *</label>
-          <input type="email" id="login-email" class="form-control" placeholder="your.email@example.com" required>
+          <label style="font-weight:700;">Password *</label>
+          <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
         </div>
 
-        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 12px; padding: 12px;">
-          <i class="bi bi-person-check-fill"></i> Register & Join Network
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 14px; padding: 12px;">
+          <i class="bi bi-box-arrow-in-right"></i> Sign In
         </button>
       </form>
 
-      <div style="text-align: center; margin: 16px 0; font-size: 0.8rem; color: var(--text-dim);">OR</div>
+      <!-- Register Form (Hidden by default) -->
+      <form id="form-register" style="display: none;">
+        <div class="form-group">
+          <label style="font-weight:700;">Full Name *</label>
+          <input type="text" id="reg-name" class="form-control" placeholder="e.g. Chetan Kenchappanavar" required>
+        </div>
 
-      <button class="btn-secondary" id="btn-guest-login" style="width: 100%; justify-content: center; padding: 10px;">
+        <div class="form-group">
+          <label style="font-weight:700;">Email Address *</label>
+          <input type="email" id="reg-email" class="form-control" placeholder="your.email@gmail.com" required>
+        </div>
+
+        <div class="form-group">
+          <label style="font-weight:700;">Password *</label>
+          <input type="password" id="reg-password" class="form-control" placeholder="••••••••" required minlength="4">
+        </div>
+
+        <div class="form-group">
+          <label style="font-weight:700;">Target Role / Job Title</label>
+          <input type="text" id="reg-role" class="form-control" placeholder="e.g. Software Engineer">
+        </div>
+
+        <button type="submit" class="btn-primary btn-accent-cyan" style="width: 100%; justify-content: center; margin-top: 14px; padding: 12px;">
+          <i class="bi bi-person-check-fill"></i> Create Account &amp; Join Network
+        </button>
+      </form>
+
+      <div style="text-align: center; margin: 16px 0 10px 0; font-size: 0.78rem; color: var(--text-dim);">OR</div>
+
+      <button class="btn-secondary" id="btn-guest-login" style="width: 100%; justify-content: center; padding: 9px; font-size:0.8rem;">
         <i class="bi bi-person-fill"></i> Continue as Guest (Browse Only)
       </button>
     </div>
@@ -961,105 +989,7 @@
   <!-- Toast Container -->
   <div id="toast-container"></div>
 
-  <!-- ═══════════════════════════════════════════════════
-       MODAL: Propose Skill Exchange
-  ════════════════════════════════════════════════════ -->
-  <div class="modal-overlay" id="propose-exchange-modal">
-    <div class="modal-content" style="max-width: 500px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
-        <div>
-          <h3 style="font-size:1.15rem; font-weight:800; margin-bottom:3px;">
-            <i class="bi bi-arrow-repeat" style="color:var(--cyan); margin-right:8px;"></i>Propose Skill Exchange
-          </h3>
-          <p style="font-size:0.8rem; color:var(--text-muted);">Sending to: <strong id="proposal-to-name" style="color:var(--cyan);"></strong></p>
-        </div>
-        <button id="close-propose-modal" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
-      </div>
 
-      <div class="form-group">
-        <label style="color:var(--purple); font-weight:700;">Your Message</label>
-        <textarea class="form-control" id="proposal-message" style="min-height:110px; line-height:1.6;" placeholder="Introduce yourself and explain what skills you'd like to exchange..."></textarea>
-      </div>
-
-      <div style="background:rgba(6,182,212,0.06); border:1px solid rgba(6,182,212,0.2); border-radius:10px; padding:12px; margin-bottom:16px; font-size:0.8rem; color:var(--text-muted);">
-        <i class="bi bi-info-circle" style="color:var(--cyan);"></i>
-        The other user will receive your proposal in their <strong style="color:#fff;">Exchange Inbox</strong> and can accept or decline.
-      </div>
-
-      <div style="display:flex; gap:10px;">
-        <button class="btn-secondary" id="btn-cancel-proposal" style="flex:1; justify-content:center;">Cancel</button>
-        <button class="btn-primary" id="btn-send-proposal" style="flex:2; justify-content:center;">
-          <i class="bi bi-send-fill"></i> Send Proposal
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════════════
-       PANEL: Exchange Inbox (slide-in from right)
-  ════════════════════════════════════════════════════ -->
-  <div id="inbox-panel" style="
-    position:fixed; top:0; right:0; height:100vh; width:380px; max-width:95vw;
-    background:rgba(10,14,26,0.97); backdrop-filter:blur(20px);
-    border-left:1px solid var(--glass-border);
-    z-index:2000; transform:translateX(100%);
-    transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);
-    display:flex; flex-direction:column; overflow:hidden;">
-
-    <!-- Header -->
-    <div style="padding:20px 20px 14px; border-bottom:1px solid var(--glass-border); flex-shrink:0;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <div>
-          <h3 style="font-size:1.05rem; font-weight:800; margin-bottom:2px;">
-            <i class="bi bi-inbox-fill" style="color:var(--cyan); margin-right:8px;"></i>Exchange Inbox
-          </h3>
-          <p style="font-size:0.75rem; color:var(--text-muted);">Skill exchange proposals from your network</p>
-        </div>
-        <button id="close-inbox-panel" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
-      </div>
-
-      <!-- Account Selector for Easy Multi-User Testing -->
-      <div style="margin-bottom:12px; background:rgba(255,255,255,0.04); padding:8px 12px; border-radius:10px; border:1px solid var(--glass-border);">
-        <label style="font-size:0.7rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; display:block; margin-bottom:4px;">
-          Active Account View:
-        </label>
-        <select class="form-control" id="inbox-user-select" onchange="switchInboxAccount(this.value)" style="font-size:0.8rem; padding:6px 10px; height:auto;">
-          <option value="chetan@gmail.com">Chetan (chetan@gmail.com)</option>
-          <option value="haha@gmail.com">haha (haha@gmail.com)</option>
-          <option value="alex.morgan@gmail.com">Alex Morgan (alex.morgan@gmail.com)</option>
-          <option value="sarah.chen@gmail.com">Sarah Chen (sarah.chen@gmail.com)</option>
-          <option value="dev.patel@gmail.com">Dev Patel (dev.patel@gmail.com)</option>
-          <option value="elena.rostova@gmail.com">Elena Rostova (elena.rostova@gmail.com)</option>
-        </select>
-      </div>
-
-      <!-- Filter Tabs -->
-      <div style="display:flex; gap:6px; background:rgba(0,0,0,0.3); padding:4px; border-radius:8px; border:1px solid var(--glass-border);">
-        <button class="inbox-tab-btn active" data-tab="all" onclick="filterInboxTab('all')" style="flex:1; background:var(--primary); color:#fff; border:none; padding:6px; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer;">
-          All Proposals
-        </button>
-        <button class="inbox-tab-btn" data-tab="received" onclick="filterInboxTab('received')" style="flex:1; background:transparent; color:var(--text-muted); border:none; padding:6px; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer;">
-          📥 Received
-        </button>
-        <button class="inbox-tab-btn" data-tab="sent" onclick="filterInboxTab('sent')" style="flex:1; background:transparent; color:var(--text-muted); border:none; padding:6px; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer;">
-          📤 Sent
-        </button>
-      </div>
-    </div>
-
-    <!-- List -->
-    <div id="inbox-list" style="flex:1; overflow-y:auto; padding:16px;">
-      <div style="text-align:center; padding:40px 20px; color:var(--text-muted);">
-        <i class="bi bi-inbox" style="font-size:2.5rem; display:block; margin-bottom:12px;"></i>
-        <p style="font-size:0.88rem;">Loading proposals…</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Inbox backdrop -->
-  <div id="inbox-backdrop" style="
-    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5);
-    z-index:1999; backdrop-filter:blur(2px);" onclick="closeInboxPanel()"></div>
 
   <!-- ═══════════════════════════════════════════════════
        MODAL: Gemini API Key Settings

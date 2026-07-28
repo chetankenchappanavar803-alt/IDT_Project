@@ -260,56 +260,156 @@ function calculateProfileCompleteness() {
 }
 
 // Auth & Guest Access System
+window.switchAuthTab = function(tab) {
+  const loginForm = document.getElementById('form-login');
+  const regForm = document.getElementById('form-register');
+  const tabLogin = document.getElementById('tab-auth-login');
+  const tabReg = document.getElementById('tab-auth-register');
+  const title = document.getElementById('auth-modal-title');
+
+  if (tab === 'login') {
+    if (loginForm) loginForm.style.display = 'block';
+    if (regForm) regForm.style.display = 'none';
+    if (title) title.textContent = 'Sign In';
+    if (tabLogin) { tabLogin.className = 'btn-primary'; }
+    if (tabReg) { tabReg.className = 'btn-secondary'; }
+  } else {
+    if (loginForm) loginForm.style.display = 'none';
+    if (regForm) regForm.style.display = 'block';
+    if (title) title.textContent = 'Create Account';
+    if (tabLogin) { tabLogin.className = 'btn-secondary'; }
+    if (tabReg) { tabReg.className = 'btn-primary btn-accent-cyan'; }
+  }
+};
+
+window.logoutUser = function() {
+  InsigniaState.currentUser = {
+    isGuest: true,
+    isRegistered: false,
+    name: 'Guest User',
+    email: '',
+    targetTitle: 'Job Seeker',
+    skillsKnown: ['JavaScript', 'HTML5', 'CSS3'],
+    skillsWanted: ['System Design', 'Python']
+  };
+  saveState();
+  updateUserUI();
+  showToast('Logged out successfully.', 'info');
+  if (typeof renderPeerCards === 'function') renderPeerCards(InsigniaState.peerNetwork);
+};
+
 function setupAuthModal() {
   const modal = document.getElementById('auth-modal');
   const openBtns = document.querySelectorAll('.trigger-auth-modal');
   const closeBtn = document.getElementById('close-auth-modal');
   const guestBtn = document.getElementById('btn-guest-login');
   const loginForm = document.getElementById('form-login');
+  const regForm = document.getElementById('form-register');
 
   openBtns.forEach(btn => {
-    btn.addEventListener('click', () => modal.classList.add('active'));
+    btn.addEventListener('click', () => modal?.classList.add('active'));
   });
 
-  if (closeBtn) closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+  if (closeBtn) closeBtn.addEventListener('click', () => modal?.classList.remove('active'));
 
   if (guestBtn) {
     guestBtn.addEventListener('click', () => {
       InsigniaState.currentUser.isGuest = true;
+      InsigniaState.currentUser.isRegistered = false;
       InsigniaState.currentUser.name = 'Guest Prepare User';
+      InsigniaState.currentUser.email = '';
       InsigniaState.currentUser.targetTitle = 'Full Stack Developer (Guest)';
       updateUserUI();
       saveState();
-      modal.classList.remove('active');
-      showToast('Logged in as Guest User', 'info');
+      modal?.classList.remove('active');
+      showToast('Logged in as Guest User (Browse Only)', 'info');
     });
   }
 
+  // Handle Login Submission (POST /api/auth/login)
   if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('login-email').value.trim();
-      const name = document.getElementById('login-name')?.value.trim() || InsigniaState.currentUser.name;
-      if (!email) return;
+      const password = document.getElementById('login-password').value.trim();
+      if (!email || !password) return;
 
-      // Only update if this is a real new login (not the placeholder)
-      InsigniaState.currentUser.email = email;
-      InsigniaState.currentUser.name = name || email.split('@')[0];
-      InsigniaState.currentUser.isGuest = false;
-      InsigniaState.currentUser.isRegistered = true;
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
 
-      // Generate ID based on email
-      InsigniaState.currentUser.id = 'usr_' + email.toLowerCase().replace(/[^a-z0-9]/g, '_');
-
-      updateUserUI();
-      saveState();
-
-      if (window.broadcastAccountToServer) {
-        window.broadcastAccountToServer(InsigniaState.currentUser);
+        if (res.ok && data.success) {
+          const user = data.user;
+          InsigniaState.currentUser = {
+            ...InsigniaState.currentUser,
+            ...user,
+            isGuest: false,
+            isRegistered: true
+          };
+          updateUserUI();
+          saveState();
+          modal?.classList.remove('active');
+          showToast(`Welcome back, ${user.name}!`, 'success');
+          if (typeof renderPeerCards === 'function') renderPeerCards(InsigniaState.peerNetwork);
+        } else {
+          showToast(data.error || 'Login failed. Invalid email or password.', 'warning');
+        }
+      } catch (err) {
+        showToast('Server offline or network error. Try again.', 'warning');
       }
+    });
+  }
 
-      modal.classList.remove('active');
-      showToast(`Welcome, ${InsigniaState.currentUser.name}! Profile synced across devices.`, 'success');
+  // Handle Register Submission (POST /api/auth/register)
+  if (regForm) {
+    regForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value.trim();
+      const role = document.getElementById('reg-role').value.trim() || 'Software Engineer';
+
+      if (!name || !email || !password) return;
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+            role,
+            skillsKnown: InsigniaState.currentUser.skillsKnown || ['React.js', 'JavaScript'],
+            skillsWanted: InsigniaState.currentUser.skillsWanted || ['System Design', 'Python'],
+            bio: InsigniaState.currentUser.bio || ''
+          })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          const user = data.user;
+          InsigniaState.currentUser = {
+            ...InsigniaState.currentUser,
+            ...user,
+            isGuest: false,
+            isRegistered: true
+          };
+          updateUserUI();
+          saveState();
+          modal?.classList.remove('active');
+          showToast(`🎉 Account created! Welcome to Insignia, ${user.name}!`, 'success');
+          if (typeof renderPeerCards === 'function') renderPeerCards(InsigniaState.peerNetwork);
+        } else {
+          showToast(data.error || 'Registration failed. Try again.', 'warning');
+        }
+      } catch (err) {
+        showToast('Server offline or network error. Try again.', 'warning');
+      }
     });
   }
 

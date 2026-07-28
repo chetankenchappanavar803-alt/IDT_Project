@@ -230,6 +230,29 @@ function saveExchanges(exchanges) {
   }
 }
 
+// Users Auth helpers
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+if (!fs.existsSync(USERS_FILE)) {
+  fs.writeFileSync(USERS_FILE, JSON.stringify([], null, 2));
+}
+
+function getUsers() {
+  try {
+    const data = fs.readFileSync(USERS_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveUsers(users) {
+  try {
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+  } catch (e) {
+    console.error('Failed to save users:', e);
+  }
+}
+
 const MIME_TYPES = {
   '.html': 'text/html; charset=UTF-8',
   '.css': 'text/css; charset=UTF-8',
@@ -250,6 +273,105 @@ const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     res.end();
+    return;
+  }
+
+  // ── AUTHENTICATION ROUTES ──────────────────────────────────────────
+  if (req.url === '/api/auth/register' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const { name, email, password, role, targetTitle, skillsKnown, skillsWanted, bio } = JSON.parse(body);
+        if (!email || !password || !name) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Name, email, and password are required.' }));
+          return;
+        }
+
+        const lowerEmail = email.trim().toLowerCase();
+        let users = getUsers();
+        if (users.some(u => u.email.toLowerCase() === lowerEmail)) {
+          res.writeHead(409, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'An account with this email already exists. Please log in.' }));
+          return;
+        }
+
+        const newUser = {
+          id: 'usr_' + Date.now(),
+          name: name.trim(),
+          email: lowerEmail,
+          password: password.trim(),
+          role: role || targetTitle || 'Software Engineer',
+          targetTitle: role || targetTitle || 'Software Engineer',
+          skillsKnown: Array.isArray(skillsKnown) ? skillsKnown : ['React.js', 'JavaScript'],
+          skillsWanted: Array.isArray(skillsWanted) ? skillsWanted : ['System Design', 'Python'],
+          bio: bio || '',
+          createdAt: new Date().toISOString()
+        };
+
+        users.unshift(newUser);
+        saveUsers(users);
+
+        // Auto-sync into network peers
+        let peers = getPeers();
+        const peerObj = {
+          id: newUser.id,
+          name: newUser.name,
+          role: newUser.role,
+          email: newUser.email,
+          avatar: newUser.name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2),
+          status: 'Active Account',
+          skillsKnown: newUser.skillsKnown,
+          skillsWanted: newUser.skillsWanted,
+          bio: newUser.bio
+        };
+        const pIdx = peers.findIndex(p => p.email.toLowerCase() === lowerEmail);
+        if (pIdx !== -1) peers[pIdx] = peerObj;
+        else peers.unshift(peerObj);
+        savePeers(peers);
+
+        const { password: _, ...userSafe } = newUser;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, user: userSafe }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+      }
+    });
+    return;
+  }
+
+  if (req.url === '/api/auth/login' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const { email, password } = JSON.parse(body);
+        if (!email || !password) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Email and password are required.' }));
+          return;
+        }
+
+        const lowerEmail = email.trim().toLowerCase();
+        const users = getUsers();
+        const user = users.find(u => u.email.toLowerCase() === lowerEmail && u.password === password.trim());
+
+        if (!user) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid email address or password.' }));
+          return;
+        }
+
+        const { password: _, ...userSafe } = user;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, user: userSafe }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+      }
+    });
     return;
   }
 
