@@ -72,6 +72,26 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* 3D Spline Interactive Background */
+#spline-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0.85;
+}
+
+#spline-bg spline-viewer {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
 /* Animated Ambient Canvas / Glow Background */
 #bg-canvas {
   position: fixed;
