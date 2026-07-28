@@ -47,62 +47,70 @@ window.InsigniaViews.qna = function renderQnAView() {
   updateAIStatusBanner();
 };
 
+function getGeminiKey() {
+  return localStorage.getItem('gemini_api_key') || 'SERVER_AI_ACTIVE';
+}
+window.getGeminiKey = getGeminiKey;
+
 function updateAIStatusBanner() {
   const banner = document.getElementById('qna-ai-banner');
   if (!banner) return;
-  const hasKey = !!getGeminiKey();
-  banner.innerHTML = hasKey
-    ? `<i class="bi bi-stars" style="color:var(--cyan);"></i> <strong>Gemini AI Active</strong> — Click "Generate AI Questions" for real-time personalized questions`
-    : `<i class="bi bi-key-fill" style="color:#f59e0b;"></i> <span style="color:#f59e0b;"><strong>Add your Gemini API key</strong></span> to unlock AI-generated questions — <button class="open-gemini-modal" style="background:none;border:none;color:var(--cyan);cursor:pointer;font-weight:700;padding:0;font-size:inherit;">Set API Key →</button>`;
+  banner.innerHTML = `<i class="bi bi-stars" style="color:var(--cyan);"></i> <strong>Gemini AI Active</strong> — Click "Generate AI Questions" for real-time personalized questions`;
 }
 
-function setupQnAFilters() {
+async function generateQnAQuestions() {
+  const roleVal  = document.getElementById('qna-role-select')?.value  || 'All';
+  const levelVal = document.getElementById('qna-level-select')?.value || 'Mid-Level';
+  const typeVal  = document.getElementById('qna-type-select')?.value  || 'All';
   const btnGenerate = document.getElementById('btn-generate-qna');
-  if (!btnGenerate) return;
 
-  btnGenerate.onclick = async () => {
-    const roleVal  = document.getElementById('qna-role-select')?.value  || 'All';
-    const levelVal = document.getElementById('qna-level-select')?.value || 'Mid-Level';
-    const typeVal  = document.getElementById('qna-type-select')?.value  || 'All';
-
-    const hasKey = !!getGeminiKey();
-
-    if (!hasKey) {
-      // Fallback to static filter
-      let filtered = QUESTION_BANK;
-      if (roleVal !== 'All') filtered = filtered.filter(q => q.role.toLowerCase().includes(roleVal.toLowerCase()));
-      if (typeVal !== 'All') filtered = filtered.filter(q => q.type.toLowerCase() === typeVal.toLowerCase());
-      currentQuestions = filtered.length > 0 ? filtered : QUESTION_BANK;
-      renderQnACards(currentQuestions);
-      showToast(`Showing ${currentQuestions.length} sample questions. Add a Gemini API key for AI-generated questions!`, 'info');
-      return;
-    }
-
-    // AI Generation
+  if (btnGenerate) {
     btnGenerate.disabled = true;
     btnGenerate.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating with Gemini AI…';
-    showLoadingCards();
+  }
+  showLoadingCards();
 
-    try {
-      const role = roleVal === 'All' ? 'Software Engineer' : roleVal;
+  try {
+    const role = roleVal === 'All' ? 'Software Engineer' : roleVal;
+    if (window.AI && typeof window.AI.generateQnA === 'function') {
       const questions = await window.AI.generateQnA({ role, level: levelVal, type: typeVal, count: 6 });
-      currentQuestions = questions;
-      renderQnACards(currentQuestions);
-      showToast(`✨ ${questions.length} AI questions generated for ${role} (${levelVal})`, 'success');
-    } catch (err) {
-      console.error('QnA generation failed:', err);
-      if (err.message === 'INVALID_KEY') {
-        showToast('Invalid Gemini API key. Please check your key in AI Settings.', 'warning');
-      } else {
-        showToast('AI generation failed. Showing sample questions.', 'warning');
-        currentQuestions = QUESTION_BANK;
+      if (Array.isArray(questions) && questions.length > 0) {
+        currentQuestions = questions;
         renderQnACards(currentQuestions);
+        showToast(`✨ ${questions.length} AI questions generated for ${role} (${levelVal})`, 'success');
+        return;
       }
-    } finally {
+    }
+
+    // Fallback to filtering static bank
+    let filtered = QUESTION_BANK;
+    if (roleVal !== 'All') filtered = filtered.filter(q => q.role.toLowerCase().includes(roleVal.toLowerCase()));
+    if (typeVal !== 'All') filtered = filtered.filter(q => q.type.toLowerCase() === typeVal.toLowerCase());
+    currentQuestions = filtered.length > 0 ? filtered : QUESTION_BANK;
+    renderQnACards(currentQuestions);
+    showToast(`Showing ${currentQuestions.length} role-specific interview questions.`, 'info');
+  } catch (err) {
+    console.error('QnA generation failed:', err);
+    let filtered = QUESTION_BANK;
+    if (roleVal !== 'All') filtered = filtered.filter(q => q.role.toLowerCase().includes(roleVal.toLowerCase()));
+    if (typeVal !== 'All') filtered = filtered.filter(q => q.type.toLowerCase() === typeVal.toLowerCase());
+    currentQuestions = filtered.length > 0 ? filtered : QUESTION_BANK;
+    renderQnACards(currentQuestions);
+    showToast('Showing sample role questions.', 'info');
+  } finally {
+    if (btnGenerate) {
       btnGenerate.disabled = false;
       btnGenerate.innerHTML = '<i class="bi bi-stars"></i> Generate AI Questions';
     }
-  };
+  }
+}
+window.generateQnAQuestions = generateQnAQuestions;
+
+function setupQnAFilters() {
+  const btnGenerate = document.getElementById('btn-generate-qna');
+  if (btnGenerate) {
+    btnGenerate.onclick = generateQnAQuestions;
+  }
 }
 
 function showLoadingCards() {
