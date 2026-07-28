@@ -632,11 +632,58 @@ async function submitExchangeProposal() {
 }
 
 // ─── INBOX ─────────────────────────────────────────────────────────────────
-let inboxPollTimer = null;
+let activeInboxTab = 'all';
+let currentInboxExchanges = [];
+
+window.switchInboxAccount = function(email) {
+  if (!email) return;
+  const nameMap = {
+    'alex.morgan@gmail.com': { name: 'Alex Morgan', role: 'Frontend Engineer', skillsKnown: ['React.js', 'JavaScript', 'CSS3'], skillsWanted: ['Node.js', 'System Design'] },
+    'sarah.chen@gmail.com': { name: 'Sarah Chen', role: 'Backend Engineer', skillsKnown: ['Node.js', 'Python', 'Docker'], skillsWanted: ['React.js', 'GraphQL'] },
+    'dev.patel@gmail.com': { name: 'Dev Patel', role: 'Full Stack Engineer', skillsKnown: ['TypeScript', 'GraphQL', 'Next.js'], skillsWanted: ['Kubernetes', 'AWS'] },
+    'elena.rostova@gmail.com': { name: 'Elena Rostova', role: 'Data Scientist', skillsKnown: ['Python', 'PyTorch', 'SQL'], skillsWanted: ['React.js', 'System Design'] }
+  };
+
+  const profile = nameMap[email.toLowerCase()] || { name: email.split('@')[0], role: 'Software Engineer', skillsKnown: ['JavaScript'], skillsWanted: ['Python'] };
+
+  InsigniaState.currentUser.email = email;
+  InsigniaState.currentUser.name = profile.name;
+  InsigniaState.currentUser.role = profile.role;
+  InsigniaState.currentUser.targetTitle = profile.role;
+  InsigniaState.currentUser.skillsKnown = profile.skillsKnown;
+  InsigniaState.currentUser.skillsWanted = profile.skillsWanted;
+  InsigniaState.currentUser.isGuest = false;
+  InsigniaState.currentUser.isRegistered = true;
+  InsigniaState.currentUser.id = 'usr_' + email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+  saveState();
+  if (typeof updateUserUI === 'function') updateUserUI();
+  if (typeof broadcastAccountToServer === 'function') broadcastAccountToServer(InsigniaState.currentUser);
+
+  showToast(`Switched view to account: ${profile.name}`, 'info');
+  loadInbox();
+};
+
+window.filterInboxTab = function(tab) {
+  activeInboxTab = tab;
+  document.querySelectorAll('.inbox-tab-btn').forEach(btn => {
+    const isTarget = btn.dataset.tab === tab;
+    btn.style.background = isTarget ? 'var(--primary)' : 'transparent';
+    btn.style.color = isTarget ? '#fff' : 'var(--text-muted)';
+  });
+  renderInbox(currentInboxExchanges);
+};
 
 async function loadInbox() {
   const user = InsigniaState.currentUser;
   const container = document.getElementById('inbox-list');
+
+  // Auto-fill active account dropdown if present
+  const selectEl = document.getElementById('inbox-user-select');
+  if (selectEl && user && user.email) {
+    const matched = Array.from(selectEl.options).some(o => o.value === user.email);
+    if (matched) selectEl.value = user.email;
+  }
 
   if (!user || !user.email) {
     const badge = document.getElementById('inbox-badge');
@@ -647,8 +694,8 @@ async function loadInbox() {
           <i class="bi bi-person-lock" style="font-size: 2.5rem; display:block; margin-bottom:12px; color: var(--amber);"></i>
           <h4 style="font-size: 0.95rem; font-weight:700; color: #fff; margin-bottom: 6px;">Profile Setup Required</h4>
           <p style="font-size:0.82rem; margin-bottom:16px;">Set up your profile email to send and receive skill exchange proposals.</p>
-          <button class="btn-primary trigger-auth-modal" style="font-size:0.8rem; padding:8px 16px;">
-            <i class="bi bi-person-circle"></i> Login / Register Profile
+          <button class="btn-primary" style="font-size:0.8rem; padding:8px 16px;" onclick="switchInboxAccount('alex.morgan@gmail.com')">
+            <i class="bi bi-person-check-fill"></i> Quick Login as Alex Morgan
           </button>
         </div>`;
     }
@@ -660,6 +707,7 @@ async function loadInbox() {
     const res = await fetch(`/api/exchanges?email=${encodeURIComponent(user.email)}${peerIdQuery}`);
     if (!res.ok) return;
     const exchanges = await res.json();
+    currentInboxExchanges = exchanges;
 
     const userLowerEmail = (user.email || '').toLowerCase().trim();
     const pendingReceived = exchanges.filter(e => {
@@ -686,16 +734,23 @@ function renderInbox(exchanges) {
   const user = InsigniaState.currentUser;
   const userLowerEmail = (user.email || '').toLowerCase().trim();
 
-  if (!exchanges || exchanges.length === 0) {
+  let list = exchanges || [];
+  if (activeInboxTab === 'received') {
+    list = list.filter(e => (e.toEmail && e.toEmail.toLowerCase().trim() === userLowerEmail) || (user.id && e.toPeerId === user.id));
+  } else if (activeInboxTab === 'sent') {
+    list = list.filter(e => (e.fromEmail && e.fromEmail.toLowerCase().trim() === userLowerEmail) || (user.id && e.fromPeerId === user.id));
+  }
+
+  if (list.length === 0) {
     container.innerHTML = `
       <div style="text-align:center; padding: 40px 20px; color: var(--text-muted);">
         <i class="bi bi-inbox" style="font-size: 2.5rem; display:block; margin-bottom:12px;"></i>
-        <p style="font-size:0.88rem;">No exchange proposals yet.<br>Propose an exchange in Skill Connect!</p>
+        <p style="font-size:0.88rem;">No ${activeInboxTab === 'received' ? 'received' : activeInboxTab === 'sent' ? 'sent' : ''} proposals found.<br>Propose an exchange in Skill Connect!</p>
       </div>`;
     return;
   }
 
-  container.innerHTML = exchanges.map(e => {
+  container.innerHTML = list.map(e => {
     const isIncoming = (e.toEmail && e.toEmail.toLowerCase().trim() === userLowerEmail) || (user.id && e.toPeerId === user.id);
     const otherName = isIncoming ? e.fromName : e.toName;
     const otherAvatar = isIncoming ? (e.fromAvatar || e.fromName?.substring(0,2).toUpperCase()) : (e.toAvatar || e.toName?.substring(0,2).toUpperCase());

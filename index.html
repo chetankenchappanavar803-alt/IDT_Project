@@ -1007,8 +1007,8 @@
     display:flex; flex-direction:column; overflow:hidden;">
 
     <!-- Header -->
-    <div style="padding:20px 20px 16px; border-bottom:1px solid var(--glass-border); flex-shrink:0;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="padding:20px 20px 14px; border-bottom:1px solid var(--glass-border); flex-shrink:0;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <div>
           <h3 style="font-size:1.05rem; font-weight:800; margin-bottom:2px;">
             <i class="bi bi-inbox-fill" style="color:var(--cyan); margin-right:8px;"></i>Exchange Inbox
@@ -1016,6 +1016,32 @@
           <p style="font-size:0.75rem; color:var(--text-muted);">Skill exchange proposals from your network</p>
         </div>
         <button id="close-inbox-panel" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+      </div>
+
+      <!-- Account Selector for Easy Multi-User Testing -->
+      <div style="margin-bottom:12px; background:rgba(255,255,255,0.04); padding:8px 12px; border-radius:10px; border:1px solid var(--glass-border);">
+        <label style="font-size:0.7rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; display:block; margin-bottom:4px;">
+          Active Account View:
+        </label>
+        <select class="form-control" id="inbox-user-select" onchange="switchInboxAccount(this.value)" style="font-size:0.8rem; padding:6px 10px; height:auto;">
+          <option value="alex.morgan@gmail.com">Alex Morgan (alex.morgan@gmail.com)</option>
+          <option value="sarah.chen@gmail.com">Sarah Chen (sarah.chen@gmail.com)</option>
+          <option value="dev.patel@gmail.com">Dev Patel (dev.patel@gmail.com)</option>
+          <option value="elena.rostova@gmail.com">Elena Rostova (elena.rostova@gmail.com)</option>
+        </select>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div style="display:flex; gap:6px; background:rgba(0,0,0,0.3); padding:4px; border-radius:8px; border:1px solid var(--glass-border);">
+        <button class="inbox-tab-btn active" data-tab="all" onclick="filterInboxTab('all')" style="flex:1; background:var(--primary); color:#fff; border:none; padding:6px; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer;">
+          All Proposals
+        </button>
+        <button class="inbox-tab-btn" data-tab="received" onclick="filterInboxTab('received')" style="flex:1; background:transparent; color:var(--text-muted); border:none; padding:6px; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer;">
+          📥 Received
+        </button>
+        <button class="inbox-tab-btn" data-tab="sent" onclick="filterInboxTab('sent')" style="flex:1; background:transparent; color:var(--text-muted); border:none; padding:6px; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer;">
+          📤 Sent
+        </button>
       </div>
     </div>
 
