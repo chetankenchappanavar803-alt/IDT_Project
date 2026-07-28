@@ -198,56 +198,7 @@ function bindResumeFormInputs() {
   // Sample Data Button
   const btnSample = document.getElementById('btn-load-sample-resume');
   if (btnSample) {
-    btnSample.onclick = () => {
-      InsigniaState.resumeData = {
-        fullName: 'Alex Morgan',
-        targetTitle: 'Senior Full Stack Engineer',
-        email: 'alex.morgan@example.com',
-        phone: '+1 (555) 019-2834',
-        location: 'San Francisco, CA',
-        linkedin: 'linkedin.com/in/alexmorgan',
-        github: 'github.com/alexmorgan',
-        summary: 'Passionate and results-driven Full Stack Engineer with 4+ years of experience engineering high-concurrency microservices, glassmorphic UI web apps, and automated CI/CD pipelines.',
-        skills: 'JavaScript (ES6+), TypeScript, React, Node.js, Express, PostgreSQL, Docker, AWS, GraphQL, REST APIs, Jest',
-        experience: [
-          {
-            company: 'TechSphere Systems',
-            role: 'Senior Frontend Developer',
-            period: '2022 - Present',
-            description: 'Led a team of 5 engineers building scalable cloud management dashboards. Increased system response time by 40% using optimized caching and state management.'
-          },
-          {
-            company: 'Innovate AI Labs',
-            role: 'Full Stack Engineer',
-            period: '2020 - 2022',
-            description: 'Developed AI-assisted analytics tools using React, Python, and Node.js. Integrated WebSocket streams for live data visualizations.'
-          }
-        ],
-        education: [
-          {
-            institution: 'University of California, Berkeley',
-            degree: 'B.S. in Computer Science',
-            period: '2016 - 2020'
-          }
-        ],
-        projects: [
-          {
-            name: 'Insignia AI Preparation Suite',
-            tech: 'HTML5, Glassmorphism CSS, ES6 JS',
-            description: 'Engineered an all-in-one AI career suite featuring real-time ATS resume preview, Q&A practice flashcards, and timed mock interview room.'
-          }
-        ]
-      };
-
-      // Refresh inputs & preview
-      renderResumeView();
-      showToast('Sample Resume Data Loaded!', 'success');
-      
-      // Update overall stats
-      InsigniaState.stats.resumesCreated = Math.max(1, InsigniaState.stats.resumesCreated);
-      InsigniaState.readiness.resume = 90;
-      saveState();
-    };
+    btnSample.onclick = window.loadSampleResume;
   }
 
   // Render Dynamic Section Fields
@@ -316,6 +267,79 @@ function bindResumeFormInputs() {
     };
   }
 }
+
+window.loadSampleResume = function loadSampleResume() {
+  InsigniaState.resumeData = {
+    fullName: 'Alex Morgan',
+    targetTitle: 'Senior Full Stack Engineer',
+    email: 'alex.morgan@example.com',
+    phone: '+1 (555) 019-2834',
+    location: 'San Francisco, CA',
+    linkedin: 'linkedin.com/in/alexmorgan',
+    github: 'github.com/alexmorgan',
+    summary: 'Passionate and results-driven Full Stack Engineer with 4+ years of experience engineering high-concurrency microservices, glassmorphic UI web apps, and automated CI/CD pipelines.',
+    skills: 'JavaScript (ES6+), TypeScript, React, Node.js, Express, PostgreSQL, Docker, AWS, GraphQL, REST APIs, Jest',
+    experience: [
+      {
+        company: 'TechSphere Systems',
+        role: 'Senior Frontend Developer',
+        period: '2022 - Present',
+        description: 'Led a team of 5 engineers building scalable cloud management dashboards. Increased system response time by 40% using optimized caching and state management.'
+      },
+      {
+        company: 'Innovate AI Labs',
+        role: 'Full Stack Engineer',
+        period: '2020 - 2022',
+        description: 'Developed AI-assisted analytics tools using React, Python, and Node.js. Integrated WebSocket streams for live data visualizations.'
+      }
+    ],
+    education: [
+      {
+        institution: 'University of California, Berkeley',
+        degree: 'B.S. in Computer Science',
+        period: '2016 - 2020'
+      }
+    ],
+    projects: [
+      {
+        name: 'Insignia AI Preparation Suite',
+        tech: 'HTML5, Glassmorphism CSS, ES6 JS',
+        description: 'Engineered an all-in-one AI career suite featuring real-time ATS resume preview, Q&A practice flashcards, and timed mock interview room.'
+      }
+    ]
+  };
+
+  // Explicitly update DOM input element values
+  const inputMap = {
+    'res-name': InsigniaState.resumeData.fullName,
+    'res-title': InsigniaState.resumeData.targetTitle,
+    'res-email': InsigniaState.resumeData.email,
+    'res-phone': InsigniaState.resumeData.phone,
+    'res-location': InsigniaState.resumeData.location,
+    'res-linkedin': InsigniaState.resumeData.linkedin,
+    'res-github': InsigniaState.resumeData.github,
+    'res-summary': InsigniaState.resumeData.summary,
+    'res-skills': InsigniaState.resumeData.skills
+  };
+
+  for (const [id, val] of Object.entries(inputMap)) {
+    const el = document.getElementById(id);
+    if (el) el.value = val || '';
+  }
+
+  // Re-render experience, education, projects, live preview, and ATS score
+  renderExperienceFormFields();
+  renderEducationFormFields();
+  renderProjectsFormFields();
+  renderLiveResumePreview();
+  calculateATSScore();
+
+  InsigniaState.stats.resumesCreated = Math.max(1, InsigniaState.stats.resumesCreated || 0);
+  InsigniaState.readiness.resume = 90;
+  saveState();
+
+  showToast('✨ Sample Resume Data Loaded Successfully!', 'success');
+};
 
 function renderExperienceFormFields() {
   const container = document.getElementById('experience-list-container');
