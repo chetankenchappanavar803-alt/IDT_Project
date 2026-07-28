@@ -289,19 +289,22 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // API Route: GET /api/exchanges?email=xxx&peerId=yyy (get proposals for a user)
+  // API Route: GET /api/exchanges?email=xxx&peerId=yyy&name=zzz (get proposals for a user)
   if (req.url.startsWith('/api/exchanges') && req.method === 'GET') {
     const urlObj = new URL(req.url, `http://${req.headers.host}`);
     const email = (urlObj.searchParams.get('email') || '').trim().toLowerCase();
     const peerId = (urlObj.searchParams.get('peerId') || '').trim();
+    const name = (urlObj.searchParams.get('name') || '').trim().toLowerCase();
     let exchanges = getExchanges();
-    if (email || peerId) {
+    if (email || peerId || name) {
       exchanges = exchanges.filter(e => {
         const toEmailMatch = email && e.toEmail && e.toEmail.trim().toLowerCase() === email;
         const fromEmailMatch = email && e.fromEmail && e.fromEmail.trim().toLowerCase() === email;
+        const toNameMatch = name && e.toName && e.toName.trim().toLowerCase() === name;
+        const fromNameMatch = name && e.fromName && e.fromName.trim().toLowerCase() === name;
         const toIdMatch = peerId && e.toPeerId === peerId;
         const fromIdMatch = peerId && e.fromPeerId === peerId;
-        return toEmailMatch || fromEmailMatch || toIdMatch || fromIdMatch;
+        return toEmailMatch || fromEmailMatch || toNameMatch || fromNameMatch || toIdMatch || fromIdMatch;
       });
     }
     res.writeHead(200, { 'Content-Type': 'application/json' });

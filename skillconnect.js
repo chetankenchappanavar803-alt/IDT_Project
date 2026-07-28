@@ -638,6 +638,8 @@ let currentInboxExchanges = [];
 window.switchInboxAccount = function(email) {
   if (!email) return;
   const nameMap = {
+    'chetan@gmail.com': { name: 'Chetan', role: 'Software Engineer', skillsKnown: ['React.js', 'JavaScript', 'Python'], skillsWanted: ['Node.js', 'System Design'] },
+    'haha@gmail.com': { name: 'haha', role: 'Frontend Developer', skillsKnown: ['Vue.js', 'CSS3', 'HTML5'], skillsWanted: ['React.js', 'Python'] },
     'alex.morgan@gmail.com': { name: 'Alex Morgan', role: 'Frontend Engineer', skillsKnown: ['React.js', 'JavaScript', 'CSS3'], skillsWanted: ['Node.js', 'System Design'] },
     'sarah.chen@gmail.com': { name: 'Sarah Chen', role: 'Backend Engineer', skillsKnown: ['Node.js', 'Python', 'Docker'], skillsWanted: ['React.js', 'GraphQL'] },
     'dev.patel@gmail.com': { name: 'Dev Patel', role: 'Full Stack Engineer', skillsKnown: ['TypeScript', 'GraphQL', 'Next.js'], skillsWanted: ['Kubernetes', 'AWS'] },
@@ -694,8 +696,8 @@ async function loadInbox() {
           <i class="bi bi-person-lock" style="font-size: 2.5rem; display:block; margin-bottom:12px; color: var(--amber);"></i>
           <h4 style="font-size: 0.95rem; font-weight:700; color: #fff; margin-bottom: 6px;">Profile Setup Required</h4>
           <p style="font-size:0.82rem; margin-bottom:16px;">Set up your profile email to send and receive skill exchange proposals.</p>
-          <button class="btn-primary" style="font-size:0.8rem; padding:8px 16px;" onclick="switchInboxAccount('alex.morgan@gmail.com')">
-            <i class="bi bi-person-check-fill"></i> Quick Login as Alex Morgan
+          <button class="btn-primary" style="font-size:0.8rem; padding:8px 16px;" onclick="switchInboxAccount('chetan@gmail.com')">
+            <i class="bi bi-person-check-fill"></i> Quick Login as Chetan
           </button>
         </div>`;
     }
@@ -704,14 +706,18 @@ async function loadInbox() {
 
   try {
     const peerIdQuery = user.id ? `&peerId=${encodeURIComponent(user.id)}` : '';
-    const res = await fetch(`/api/exchanges?email=${encodeURIComponent(user.email)}${peerIdQuery}`);
+    const nameQuery = user.name ? `&name=${encodeURIComponent(user.name)}` : '';
+    const res = await fetch(`/api/exchanges?email=${encodeURIComponent(user.email)}${peerIdQuery}${nameQuery}`);
     if (!res.ok) return;
     const exchanges = await res.json();
     currentInboxExchanges = exchanges;
 
     const userLowerEmail = (user.email || '').toLowerCase().trim();
+    const userLowerName = (user.name || '').toLowerCase().trim();
     const pendingReceived = exchanges.filter(e => {
-      const isToMe = (e.toEmail && e.toEmail.toLowerCase().trim() === userLowerEmail) || (user.id && e.toPeerId === user.id);
+      const isToMe = (e.toEmail && e.toEmail.toLowerCase().trim() === userLowerEmail) || 
+                     (e.toName && e.toName.toLowerCase().trim() === userLowerName) || 
+                     (user.id && e.toPeerId === user.id);
       return isToMe && e.status === 'pending';
     });
 
@@ -733,12 +739,13 @@ function renderInbox(exchanges) {
 
   const user = InsigniaState.currentUser;
   const userLowerEmail = (user.email || '').toLowerCase().trim();
+  const userLowerName = (user.name || '').toLowerCase().trim();
 
   let list = exchanges || [];
   if (activeInboxTab === 'received') {
-    list = list.filter(e => (e.toEmail && e.toEmail.toLowerCase().trim() === userLowerEmail) || (user.id && e.toPeerId === user.id));
+    list = list.filter(e => (e.toEmail && e.toEmail.toLowerCase().trim() === userLowerEmail) || (e.toName && e.toName.toLowerCase().trim() === userLowerName) || (user.id && e.toPeerId === user.id));
   } else if (activeInboxTab === 'sent') {
-    list = list.filter(e => (e.fromEmail && e.fromEmail.toLowerCase().trim() === userLowerEmail) || (user.id && e.fromPeerId === user.id));
+    list = list.filter(e => (e.fromEmail && e.fromEmail.toLowerCase().trim() === userLowerEmail) || (e.fromName && e.fromName.toLowerCase().trim() === userLowerName) || (user.id && e.fromPeerId === user.id));
   }
 
   if (list.length === 0) {
@@ -751,7 +758,9 @@ function renderInbox(exchanges) {
   }
 
   container.innerHTML = list.map(e => {
-    const isIncoming = (e.toEmail && e.toEmail.toLowerCase().trim() === userLowerEmail) || (user.id && e.toPeerId === user.id);
+    const isIncoming = (e.toEmail && e.toEmail.toLowerCase().trim() === userLowerEmail) || 
+                       (e.toName && e.toName.toLowerCase().trim() === userLowerName) || 
+                       (user.id && e.toPeerId === user.id);
     const otherName = isIncoming ? e.fromName : e.toName;
     const otherAvatar = isIncoming ? (e.fromAvatar || e.fromName?.substring(0,2).toUpperCase()) : (e.toAvatar || e.toName?.substring(0,2).toUpperCase());
     const statusColor = e.status === 'accepted' ? 'var(--emerald)' : e.status === 'declined' ? '#ef4444' : 'var(--amber, #f59e0b)';
