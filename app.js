@@ -232,7 +232,8 @@ function updateUserUI() {
   const avatarElems = document.querySelectorAll('.user-avatar-text');
 
   const name = InsigniaState.currentUser.name || 'Guest User';
-  const role = InsigniaState.currentUser.targetTitle || 'Job Seeker';
+  const email = InsigniaState.currentUser.email || '';
+  const role = email || InsigniaState.currentUser.targetTitle || 'Job Seeker';
   const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
   nameElems.forEach(el => el.textContent = name);

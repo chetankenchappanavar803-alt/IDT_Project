@@ -373,15 +373,18 @@ function renderPeerGrid(peers) {
         </div>
 
         <!-- User Avatar & Header -->
-        <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 16px; cursor: pointer;" onclick="openPeerProfileModal('${p.id}')">
+        <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 14px; cursor: pointer;" onclick="openPeerProfileModal('${p.id}')">
           <div class="peer-avatar-circle" style="${p.isSelf ? 'background: linear-gradient(135deg,var(--cyan),var(--purple)); color:#fff;' : ''}">
             ${escapeHTML(p.avatar || (p.name ? p.name.substring(0,2).toUpperCase() : 'US'))}
           </div>
           <div>
-            <h4 style="font-size: 1.1rem; font-weight: 800; color: #fff;">
+            <h4 style="font-size: 1.1rem; font-weight: 800; color: #fff; line-height: 1.2;">
               ${escapeHTML(p.name)} ${p.isSelf ? '<span style="font-size:0.75rem; color:var(--cyan); font-weight:600;">(You)</span>' : ''}
             </h4>
-            <p style="font-size: 0.8rem; color: var(--text-muted);">${escapeHTML(p.role || 'Job Seeker')} ${p.targetCompany ? `• Target: <strong style="color: var(--cyan);">${escapeHTML(p.targetCompany)}</strong>` : ''}</p>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">${escapeHTML(p.role || 'Job Seeker')} ${p.targetCompany ? `• <strong style="color: var(--cyan);">${escapeHTML(p.targetCompany)}</strong>` : ''}</p>
+            <div style="font-size: 0.76rem; color: var(--cyan); font-weight: 600; margin-top: 3px; display: flex; align-items: center; gap: 5px;">
+              <i class="bi bi-envelope-fill" style="font-size:0.72rem;"></i> ${escapeHTML(p.email || 'Registered User')}
+            </div>
           </div>
         </div>
 
@@ -426,9 +429,9 @@ function renderPeerGrid(peers) {
       <!-- Action Buttons -->
       <div style="display: flex; gap: 8px; margin-top: 12px;">
         ${p.isSelf ? `
-          <button class="btn-secondary trigger-auth-modal" style="flex: 1; font-size: 0.8rem; padding: 10px 12px;">
-            <i class="bi bi-pencil-square" style="color:var(--cyan);"></i> Edit My Profile
-          </button>
+          <div style="font-size: 0.78rem; color: var(--emerald); font-weight: 700; width: 100%; text-align: center; padding: 9px 12px; background: rgba(16,185,129,0.12); border-radius: var(--radius-sm); border: 1px solid rgba(16,185,129,0.3); display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <i class="bi bi-check-circle-fill"></i> ${escapeHTML(p.email || 'Your Active Profile')}
+          </div>
         ` : `
           <button class="btn-primary" style="flex: 1; font-size: 0.8rem; padding: 10px 12px;" onclick="proposeSkillExchange('${escapeHTML(p.name)}', '${p.id}', '${escapeHTML(p.email || '')}')">
             <i class="bi bi-arrow-repeat"></i> Propose
@@ -956,9 +959,9 @@ window.openPeerProfileModal = function(peerId) {
     const isSelf = user && user.email && peer.email && (user.email.toLowerCase() === peer.email.toLowerCase());
     if (isSelf) {
       actionsContainer.innerHTML = `
-        <button class="btn-secondary trigger-auth-modal" style="width:100%; font-size:0.84rem; padding:10px;" onclick="document.getElementById('peer-details-modal')?.classList.remove('active');">
-          <i class="bi bi-pencil-square"></i> Edit My Profile
-        </button>`;
+        <div style="font-size: 0.82rem; color: var(--emerald); font-weight: 700; width: 100%; text-align: center; padding: 10px; background: rgba(16,185,129,0.12); border-radius: var(--radius-md); border: 1px solid rgba(16,185,129,0.3);">
+          <i class="bi bi-person-check-fill"></i> ${escapeHTML(peer.email || 'Registered Active Profile')}
+        </div>`;
     } else {
       actionsContainer.innerHTML = `
         <button class="btn-primary" style="flex:1; font-size:0.84rem; padding:10px;" onclick="document.getElementById('peer-details-modal')?.classList.remove('active'); proposeSkillExchange('${escapeHTML(peer.name)}', '${peer.id}', '${escapeHTML(peer.email || '')}');">
