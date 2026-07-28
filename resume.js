@@ -250,29 +250,61 @@ function bindResumeFormInputs() {
     };
   }
 
+  // Render Dynamic Section Fields
+  renderExperienceFormFields();
+  renderEducationFormFields();
+  renderProjectsFormFields();
+
   // Add Dynamic Entry Buttons
   const btnAddExp = document.getElementById('btn-add-exp');
   if (btnAddExp) {
     btnAddExp.onclick = () => {
+      InsigniaState.resumeData.experience = InsigniaState.resumeData.experience || [];
       InsigniaState.resumeData.experience.push({
         company: 'New Company',
-        role: 'Job Role',
+        role: 'Software Engineer',
         period: '2023 - Present',
-        description: 'Key achievements and technical responsibilities...'
+        description: 'Key achievements, technical architecture, and impact details...'
       });
-      renderResumeView();
+      renderExperienceFormFields();
+      renderLiveResumePreview();
+      calculateATSScore();
+      saveState();
+      showToast('New Work Experience entry added!', 'success');
     };
   }
 
   const btnAddEdu = document.getElementById('btn-add-edu');
   if (btnAddEdu) {
     btnAddEdu.onclick = () => {
+      InsigniaState.resumeData.education = InsigniaState.resumeData.education || [];
       InsigniaState.resumeData.education.push({
-        institution: 'University / Institute',
-        degree: 'Degree Name',
+        institution: 'University / Institute Name',
+        degree: 'B.S. in Computer Science',
         period: '2019 - 2023'
       });
-      renderResumeView();
+      renderEducationFormFields();
+      renderLiveResumePreview();
+      calculateATSScore();
+      saveState();
+      showToast('New Education entry added!', 'success');
+    };
+  }
+
+  const btnAddProj = document.getElementById('btn-add-proj');
+  if (btnAddProj) {
+    btnAddProj.onclick = () => {
+      InsigniaState.resumeData.projects = InsigniaState.resumeData.projects || [];
+      InsigniaState.resumeData.projects.push({
+        name: 'New Technical Project',
+        tech: 'React, Node.js, REST APIs',
+        description: 'Built a scalable application featuring live updates and high performance.'
+      });
+      renderProjectsFormFields();
+      renderLiveResumePreview();
+      calculateATSScore();
+      saveState();
+      showToast('New Key Project entry added!', 'success');
     };
   }
 
@@ -284,6 +316,198 @@ function bindResumeFormInputs() {
     };
   }
 }
+
+function renderExperienceFormFields() {
+  const container = document.getElementById('experience-list-container');
+  if (!container) return;
+
+  const data = InsigniaState.resumeData;
+  data.experience = data.experience || [];
+
+  if (data.experience.length === 0) {
+    container.innerHTML = `
+      <div style="font-size: 0.82rem; color: var(--text-muted); font-style: italic; text-align: center; padding: 12px; border: 1px dashed var(--glass-border); border-radius: 8px;">
+        No work experience added yet. Click "+ Add Experience" above to add employment history.
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = data.experience.map((exp, idx) => `
+    <div class="glass-card" style="padding: 14px; position: relative; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <span style="font-size: 0.8rem; font-weight: 700; color: var(--cyan);">💼 Experience #${idx + 1}</span>
+        <button class="btn-secondary" style="padding: 2px 8px; font-size: 0.72rem; color: #ef4444; border-color: rgba(239,68,68,0.3);" onclick="removeExperienceEntry(${idx})">
+          <i class="bi bi-trash"></i> Remove
+        </button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.75rem;">Company Name *</label>
+          <input type="text" class="form-control" style="font-size: 0.82rem; padding: 6px 10px;" value="${escapeHTML(exp.company || '')}" oninput="updateExperienceField(${idx}, 'company', this.value)">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.75rem;">Job Title / Role *</label>
+          <input type="text" class="form-control" style="font-size: 0.82rem; padding: 6px 10px;" value="${escapeHTML(exp.role || '')}" oninput="updateExperienceField(${idx}, 'role', this.value)">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 8px;">
+        <label style="font-size: 0.75rem;">Period / Dates (e.g. 2022 - Present)</label>
+        <input type="text" class="form-control" style="font-size: 0.82rem; padding: 6px 10px;" value="${escapeHTML(exp.period || '')}" oninput="updateExperienceField(${idx}, 'period', this.value)">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label style="font-size: 0.75rem;">Key Achievements & Responsibilities</label>
+        <textarea class="form-control" style="font-size: 0.82rem; padding: 6px 10px; min-height: 55px;" oninput="updateExperienceField(${idx}, 'description', this.value)">${escapeHTML(exp.description || '')}</textarea>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.updateExperienceField = function(idx, key, value) {
+  InsigniaState.resumeData.experience = InsigniaState.resumeData.experience || [];
+  if (InsigniaState.resumeData.experience[idx]) {
+    InsigniaState.resumeData.experience[idx][key] = value;
+    renderLiveResumePreview();
+    calculateATSScore();
+    saveState();
+  }
+};
+
+window.removeExperienceEntry = function(idx) {
+  InsigniaState.resumeData.experience.splice(idx, 1);
+  renderExperienceFormFields();
+  renderLiveResumePreview();
+  calculateATSScore();
+  saveState();
+  showToast('Work Experience entry removed', 'info');
+};
+
+function renderEducationFormFields() {
+  const container = document.getElementById('education-list-container');
+  if (!container) return;
+
+  const data = InsigniaState.resumeData;
+  data.education = data.education || [];
+
+  if (data.education.length === 0) {
+    container.innerHTML = `
+      <div style="font-size: 0.82rem; color: var(--text-muted); font-style: italic; text-align: center; padding: 12px; border: 1px dashed var(--glass-border); border-radius: 8px;">
+        No education added yet. Click "+ Add Education" above to add your qualifications.
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = data.education.map((edu, idx) => `
+    <div class="glass-card" style="padding: 14px; position: relative; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <span style="font-size: 0.8rem; font-weight: 700; color: var(--purple);">🎓 Education #${idx + 1}</span>
+        <button class="btn-secondary" style="padding: 2px 8px; font-size: 0.72rem; color: #ef4444; border-color: rgba(239,68,68,0.3);" onclick="removeEducationEntry(${idx})">
+          <i class="bi bi-trash"></i> Remove
+        </button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.75rem;">University / Institution *</label>
+          <input type="text" class="form-control" style="font-size: 0.82rem; padding: 6px 10px;" value="${escapeHTML(edu.institution || '')}" oninput="updateEducationField(${idx}, 'institution', this.value)">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.75rem;">Degree / Field of Study *</label>
+          <input type="text" class="form-control" style="font-size: 0.82rem; padding: 6px 10px;" value="${escapeHTML(edu.degree || '')}" oninput="updateEducationField(${idx}, 'degree', this.value)">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label style="font-size: 0.75rem;">Period / Dates (e.g. 2017 - 2021)</label>
+        <input type="text" class="form-control" style="font-size: 0.82rem; padding: 6px 10px;" value="${escapeHTML(edu.period || '')}" oninput="updateEducationField(${idx}, 'period', this.value)">
+      </div>
+    </div>
+  `).join('');
+}
+
+window.updateEducationField = function(idx, key, value) {
+  InsigniaState.resumeData.education = InsigniaState.resumeData.education || [];
+  if (InsigniaState.resumeData.education[idx]) {
+    InsigniaState.resumeData.education[idx][key] = value;
+    renderLiveResumePreview();
+    calculateATSScore();
+    saveState();
+  }
+};
+
+window.removeEducationEntry = function(idx) {
+  InsigniaState.resumeData.education.splice(idx, 1);
+  renderEducationFormFields();
+  renderLiveResumePreview();
+  calculateATSScore();
+  saveState();
+  showToast('Education entry removed', 'info');
+};
+
+function renderProjectsFormFields() {
+  const container = document.getElementById('projects-list-container');
+  if (!container) return;
+
+  const data = InsigniaState.resumeData;
+  data.projects = data.projects || [];
+
+  if (data.projects.length === 0) {
+    container.innerHTML = `
+      <div style="font-size: 0.82rem; color: var(--text-muted); font-style: italic; text-align: center; padding: 12px; border: 1px dashed var(--glass-border); border-radius: 8px;">
+        No key projects added yet. Click "+ Add Project" above to highlight your technical projects.
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = data.projects.map((proj, idx) => `
+    <div class="glass-card" style="padding: 14px; position: relative; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <span style="font-size: 0.8rem; font-weight: 700; color: var(--emerald);">🚀 Project #${idx + 1}</span>
+        <button class="btn-secondary" style="padding: 2px 8px; font-size: 0.72rem; color: #ef4444; border-color: rgba(239,68,68,0.3);" onclick="removeProjectEntry(${idx})">
+          <i class="bi bi-trash"></i> Remove
+        </button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.75rem;">Project Name *</label>
+          <input type="text" class="form-control" style="font-size: 0.82rem; padding: 6px 10px;" value="${escapeHTML(proj.name || '')}" oninput="updateProjectField(${idx}, 'name', this.value)">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.75rem;">Technologies Used</label>
+          <input type="text" class="form-control" style="font-size: 0.82rem; padding: 6px 10px;" value="${escapeHTML(proj.tech || '')}" oninput="updateProjectField(${idx}, 'tech', this.value)">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label style="font-size: 0.75rem;">Project Description & Highlights</label>
+        <textarea class="form-control" style="font-size: 0.82rem; padding: 6px 10px; min-height: 50px;" oninput="updateProjectField(${idx}, 'description', this.value)">${escapeHTML(proj.description || '')}</textarea>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.updateProjectField = function(idx, key, value) {
+  InsigniaState.resumeData.projects = InsigniaState.resumeData.projects || [];
+  if (InsigniaState.resumeData.projects[idx]) {
+    InsigniaState.resumeData.projects[idx][key] = value;
+    renderLiveResumePreview();
+    calculateATSScore();
+    saveState();
+  }
+};
+
+window.removeProjectEntry = function(idx) {
+  InsigniaState.resumeData.projects.splice(idx, 1);
+  renderProjectsFormFields();
+  renderLiveResumePreview();
+  calculateATSScore();
+  saveState();
+  showToast('Project entry removed', 'info');
+};
+
 
 function bindInput(elementId, obj, key) {
   const el = document.getElementById(elementId);

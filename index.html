@@ -471,15 +471,32 @@
               <textarea class="form-control" id="res-skills" style="min-height: 60px;" placeholder="JavaScript, React, Node.js, HTML5, CSS3..."></textarea>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0 12px 0;">
-              <h4 style="font-size: 1rem; font-weight: 700;">💼 Work Experience</h4>
-              <button class="btn-secondary" id="btn-add-exp" style="padding: 4px 10px; font-size: 0.75rem;">+ Add Entry</button>
+            <!-- Work Experience Section -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 24px 0 12px 0; border-bottom: 1px solid var(--glass-border); padding-bottom: 8px;">
+              <h4 style="font-size: 1rem; font-weight: 700; color: #fff;">💼 Work Experience</h4>
+              <button class="btn-secondary" id="btn-add-exp" style="padding: 4px 12px; font-size: 0.78rem;">
+                <i class="bi bi-plus-lg"></i> + Add Experience
+              </button>
             </div>
+            <div id="experience-list-container" style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;"></div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0 12px 0;">
-              <h4 style="font-size: 1rem; font-weight: 700;">🎓 Education</h4>
-              <button class="btn-secondary" id="btn-add-edu" style="padding: 4px 10px; font-size: 0.75rem;">+ Add Entry</button>
+            <!-- Education Section -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 24px 0 12px 0; border-bottom: 1px solid var(--glass-border); padding-bottom: 8px;">
+              <h4 style="font-size: 1rem; font-weight: 700; color: #fff;">🎓 Education &amp; Qualifications</h4>
+              <button class="btn-secondary" id="btn-add-edu" style="padding: 4px 12px; font-size: 0.78rem;">
+                <i class="bi bi-plus-lg"></i> + Add Education
+              </button>
             </div>
+            <div id="education-list-container" style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;"></div>
+
+            <!-- Projects Section -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 24px 0 12px 0; border-bottom: 1px solid var(--glass-border); padding-bottom: 8px;">
+              <h4 style="font-size: 1rem; font-weight: 700; color: #fff;">🚀 Key Projects</h4>
+              <button class="btn-secondary" id="btn-add-proj" style="padding: 4px 12px; font-size: 0.78rem;">
+                <i class="bi bi-plus-lg"></i> + Add Project
+              </button>
+            </div>
+            <div id="projects-list-container" style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;"></div>
           </div>
 
           <!-- Right: Live ATS Preview -->
