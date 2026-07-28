@@ -14,11 +14,13 @@ window.InsigniaViews.dashboard = function renderDashboardView() {
   const countQna = document.getElementById('stat-qna-count');
   const countStudy = document.getElementById('stat-study-count');
   const countMock = document.getElementById('stat-mock-count');
+  const countPeers = document.getElementById('stat-peers-count');
 
   if (countResume) countResume.textContent = stats.resumesCreated || 0;
   if (countQna) countQna.textContent = stats.qnaPracticed || 0;
   if (countStudy) countStudy.textContent = stats.topicsStudied || 0;
   if (countMock) countMock.textContent = stats.mockCompleted || 0;
+  if (countPeers) countPeers.textContent = (InsigniaState.peerNetwork || []).length;
 
   // Update Overall Readiness Gauge
   updateGaugeScore(readiness.overall);
@@ -59,6 +61,7 @@ function updateProgressBar(id, value) {
 function setupQuickActions() {
   const actions = [
     { id: 'btn-action-resume', view: 'resume' },
+    { id: 'btn-action-skillconnect', view: 'skillconnect' },
     { id: 'btn-action-qna', view: 'qna' },
     { id: 'btn-action-study', view: 'study' },
     { id: 'btn-action-mock', view: 'mock' }
