@@ -433,14 +433,11 @@ function renderPeerGrid(peers) {
             <i class="bi bi-check-circle-fill"></i> ${escapeHTML(p.email || 'Your Active Profile')}
           </div>
         ` : `
-          <button class="btn-primary" style="flex: 1; font-size: 0.8rem; padding: 10px 12px;" onclick="proposeSkillExchange('${escapeHTML(p.name)}', '${p.id}', '${escapeHTML(p.email || '')}')">
-            <i class="bi bi-arrow-repeat"></i> Propose
-          </button>
-          <button class="btn-secondary" style="font-size: 0.8rem; padding: 10px 12px;" title="Direct Message" onclick="sendMessagePeer('${escapeHTML(p.name)}', '${escapeHTML(p.email || '')}', '${p.id}')">
-            <i class="bi bi-chat-dots-fill"></i>
+          <button class="btn-primary btn-accent-cyan" style="flex: 1; font-size: 0.82rem; padding: 10px 14px;" onclick="emailPeerDirect('${escapeHTML(p.name)}', '${escapeHTML(p.email || '')}')">
+            <i class="bi bi-envelope-fill"></i> Email ${escapeHTML(p.name.split(' ')[0])}
           </button>
           <button class="btn-secondary" style="font-size: 0.8rem; padding: 10px 12px;" title="View Full Profile" onclick="openPeerProfileModal('${p.id}')">
-            <i class="bi bi-eye-fill"></i>
+            <i class="bi bi-eye-fill"></i> Details
           </button>
         `}
       </div>
@@ -557,31 +554,32 @@ async function broadcastAccountToServer(accountObj) {
 
 window.broadcastAccountToServer = broadcastAccountToServer;
 
-// ─── PROPOSE EXCHANGE MODAL ────────────────────────────────────────────────
-let currentProposalTarget = null;
+// ─── DIRECT 1-CLICK EMAIL ACTION ───────────────────────────────────────────
+window.emailPeerDirect = function(name, email) {
+  const user = InsigniaState.currentUser || {};
+  const targetEmail = (email && email.trim()) ? email.trim() : `${(name || 'user').toLowerCase().replace(/[^a-z0-9]/g, '')}@gmail.com`;
+  
+  const knownSkills = (user.skillsKnown && user.skillsKnown.length > 0) ? user.skillsKnown.slice(0, 3).join(', ') : 'software engineering';
+  const wantedSkills = (user.skillsWanted && user.skillsWanted.length > 0) ? user.skillsWanted.slice(0, 3).join(', ') : 'tech concepts';
+
+  const subject = encodeURIComponent(`Insignia Skill Exchange Proposal from ${user.name || 'a Peer'}`);
+  const body = encodeURIComponent(
+    `Hi ${name},\n\n` +
+    `I found your profile on Insignia Skill Connect and I would love to connect for a mutual skill exchange!\n\n` +
+    `🎓 Skills I can offer/teach: ${knownSkills}\n` +
+    `🧠 Skills I'd love to learn from you: ${wantedSkills}\n\n` +
+    `Let me know if you'd like to schedule a quick 1-on-1 prep session!\n\n` +
+    `Best regards,\n` +
+    `${user.name || 'Candidate'}\n` +
+    `${user.email ? '(' + user.email + ')' : ''}`
+  );
+
+  window.location.href = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
+  showToast(`📧 Opening email client to message ${name} (${targetEmail})...`, 'success');
+};
 
 window.proposeSkillExchange = function(name, id, email) {
-  const user = InsigniaState.currentUser;
-  if (!user.email || user.isGuest) {
-    showToast('Please register your profile name & email first to send an exchange proposal!', 'warning');
-    document.getElementById('auth-modal')?.classList.add('active');
-    return;
-  }
-
-  const targetEmail = (email && email.trim()) ? email.trim() : `${(name || 'user').toLowerCase().replace(/[^a-z0-9]/g, '')}@gmail.com`;
-
-  currentProposalTarget = { name, id, email: targetEmail };
-
-  const modal = document.getElementById('propose-exchange-modal');
-  const toName = document.getElementById('proposal-to-name');
-  const msgInput = document.getElementById('proposal-message');
-
-  if (toName) toName.textContent = name;
-  if (msgInput) {
-    msgInput.value = `Hi ${name}, I'd love to do a skill exchange with you! I can help you with ${(user.skillsKnown || []).slice(0,2).join(', ') || 'my skills'} and I'd love to learn ${(user.skillsWanted || []).slice(0,2).join(', ') || 'from you'}. Let's connect!`;
-  }
-
-  modal?.classList.add('active');
+  emailPeerDirect(name, email);
 };
 
 async function submitExchangeProposal() {
@@ -964,11 +962,8 @@ window.openPeerProfileModal = function(peerId) {
         </div>`;
     } else {
       actionsContainer.innerHTML = `
-        <button class="btn-primary" style="flex:1; font-size:0.84rem; padding:10px;" onclick="document.getElementById('peer-details-modal')?.classList.remove('active'); proposeSkillExchange('${escapeHTML(peer.name)}', '${peer.id}', '${escapeHTML(peer.email || '')}');">
-          <i class="bi bi-arrow-repeat"></i> Propose Exchange
-        </button>
-        <button class="btn-secondary" style="flex:1; font-size:0.84rem; padding:10px;" onclick="document.getElementById('peer-details-modal')?.classList.remove('active'); sendMessagePeer('${escapeHTML(peer.name)}', '${escapeHTML(peer.email || '')}', '${peer.id}');">
-          <i class="bi bi-chat-dots-fill"></i> Direct Message
+        <button class="btn-primary btn-accent-cyan" style="width:100%; font-size:0.88rem; padding:12px; justify-content:center;" onclick="document.getElementById('peer-details-modal')?.classList.remove('active'); emailPeerDirect('${escapeHTML(peer.name)}', '${escapeHTML(peer.email || '')}');">
+          <i class="bi bi-envelope-fill"></i> Send Direct Email to ${escapeHTML(peer.name)}
         </button>`;
     }
   }
